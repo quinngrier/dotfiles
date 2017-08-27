@@ -1,0 +1,31 @@
+#
+# This file (~/.bashrc-bottom) holds the code that should be put at the
+# bottom of the ~/.bashrc file. The following command can be put at the
+# bottom of the ~/.bashrc file to do this indirectly:
+#
+#       . ~/.bashrc-bottom
+#
+# The reason for not putting the code directly into the ~/.bashrc file
+# is to make it easier to work with default ~/.bashrc files on systems
+# that provide them. It is easier to make this file portable and make
+# the above small change on each system than it is to make a portable
+# ~/.bashrc file that reasonably subsumes all default ~/.bashrc files.
+#
+# Note that the master copy of the default ~/.bashrc file can sometimes
+# be found at one of the following locations:
+#
+#       /etc/skel/.bashrc
+#
+
+PS1='\[\e[0m\]\[\e]0;\u@\h:\w\a\]\[\e[37;44m\]\[\e[K\]'
+PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\h:\w]\[\e[0m\]\n\$ '
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
