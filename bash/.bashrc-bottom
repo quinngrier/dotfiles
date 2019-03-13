@@ -17,6 +17,20 @@
 #       /etc/skel/.bashrc
 #
 
+#
+# PS1 defines the prompt string, which looks like this:
+#
+#       [0][user@host:/current/working/directory]
+#       $
+#
+# The "[0]" part is the exit status of the last command. If the command
+# was a pipeline, then the exit status of every command in the pipeline
+# will appear, separated by spaces. For example, "true | false | false"
+# yields "[0 1 1]". The first line of the prompt string is colored all
+# the way to the edge of the window for visual distinction. The window
+# title is kept updated to "user@host:/current/working/directory".
+#
+
 PS1='\[\e[0m\]\[\e]0;\u@\h:\w\a\]\[\e[37;44m\]\[\e[K\]'
 PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\h:\w]\[\e[0m\]\n\$ '
 
