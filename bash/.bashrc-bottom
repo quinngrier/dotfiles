@@ -31,8 +31,8 @@
 # title is kept updated to "user@host:/current/working/directory".
 #
 
-PS1='\[\e[0m\]\[\e]0;\u@\h:\w\a\]\[\e[37;44m\]\[\e[K\]';
-PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\h:\w]\[\e[0m\]\n\$ ';
+PS1='\[\e[0m\]\[\e]0;\u@\h:\w\a\]\[\e[37;44m\]\[\e[K\]'
+PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\h:\w]\[\e[0m\]\n\$ '
 
 #
 # The ssha alias sets up ssh-agent and starts an inner shell for you to
@@ -47,7 +47,7 @@ PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\h:\w]\[\e[0m\]\n\$ ';
   "${SHELL}" && \
   '\''ssh-agent'\'' '\''-k'\'' && \
   '\''exit'\'' '\''0'\'' \
-';
+'
 
 #
 # The authors of this file have waived all copyright and
