@@ -44,6 +44,7 @@ PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 SSH_AGENT_COMMANDS=$(ssh-agent) &&
 trap "ssh-agent -k" EXIT &&
 eval "$SSH_AGENT_COMMANDS"
+readonly SSH_AGENT_COMMANDS
 
 #
 # The authors of this file have waived all copyright and
