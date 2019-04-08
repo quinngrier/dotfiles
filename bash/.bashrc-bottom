@@ -38,19 +38,12 @@ PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
 PS1="$PS1"'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
 #
-# The ssha alias sets up ssh-agent and starts an inner shell for you to
-# work in. When you exit the inner shell, the alias shuts down ssh-agent
-# and exits the outer shell. You can use this to "replace" your current
-# shell with one that has ssh-agent set up.
+# Set up ssh-agent.
 #
 
-'alias' 'ssha= \
-  x=`'\''ssh-agent'\''` && \
-  '\''eval'\'' "${x}" && \
-  "${SHELL}" && \
-  '\''ssh-agent'\'' '\''-k'\'' && \
-  '\''exit'\'' '\''0'\'' \
-'
+SSH_AGENT_COMMANDS=$(ssh-agent) &&
+trap "ssh-agent -k" EXIT &&
+eval "$SSH_AGENT_COMMANDS"
 
 #
 # The authors of this file have waived all copyright and
