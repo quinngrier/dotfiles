@@ -18,7 +18,9 @@
 #
 
 #
-# PS1 defines the prompt string, which looks like this:
+# Set the prompt string and window title.
+#
+# The prompt string looks like this:
 #
 #       [0][user@host:/current/working/directory]
 #       $
@@ -27,12 +29,13 @@
 # was a pipeline, then the exit status of every command in the pipeline
 # will appear, separated by spaces. For example, "true | false | false"
 # yields "[0 1 1]". The first line of the prompt string is colored all
-# the way to the edge of the window for visual distinction. The window
-# title is kept updated to "user@host:/current/working/directory".
+# the way to the edge of the window for visual distinction.
+#
+# The window title is set to "user@host:/current/working/directory".
 #
 
 PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
-PS1="${PS1}"'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
+PS1="$PS1"'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
 #
 # The ssha alias sets up ssh-agent and starts an inner shell for you to
