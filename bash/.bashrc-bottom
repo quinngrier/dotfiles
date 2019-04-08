@@ -38,6 +38,14 @@ PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
 PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
 #
+# Set up gpg-agent.
+#
+
+GPG_TTY=$(tty)
+readonly GPG_TTY
+export GPG_TTY
+
+#
 # Set up ssh-agent.
 #
 
