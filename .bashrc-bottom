@@ -52,7 +52,7 @@ eval $(
 
   case "$uname" in
     (*CYGWIN*)
-      boot=$(wmic os get lastbootuptime | tr -d "\\r " | sed -n 2p)
+      boot=$(WMIC OS GET LastBootUpTime | tr -d "\\r " | sed -n 2p)
     ;;
     (*)
       boot=$(who -b | sed "s/.*boot//")
