@@ -73,7 +73,6 @@ eval $(
 )
 
 GPG_TTY=$(tty)
-readonly GPG_TTY
 export GPG_TTY
 
 #
