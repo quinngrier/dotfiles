@@ -61,7 +61,7 @@ eval $(
   esac
   readonly boot
 
-  inherit-or-start() {
+  inherit_or_start() {
     if [[ ! -f $1-$boot ]]; then
       rm -f $1-* || :
       $2 >$1-$boot
@@ -69,8 +69,8 @@ eval $(
     echo . $1-$boot \;
   }
 
-  inherit-or-start ~/.bashrc-gpg-agent "gpg-agent --daemon" || :
-  inherit-or-start ~/.bashrc-ssh-agent "ssh-agent" || :
+  inherit_or_start ~/.bashrc-gpg-agent "gpg-agent --daemon" || :
+  inherit_or_start ~/.bashrc-ssh-agent "ssh-agent" || :
 
 )
 
