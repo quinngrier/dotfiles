@@ -64,7 +64,7 @@ eval $(
   inherit_or_start() {
     if [[ ! -f "$1-$boot" ]]; then
       rm -f "$1-"* || :
-      $2 >"$1-$boot"
+      eval "$2" >"$1-$boot"
     fi
     echo . "$1-$boot" \;
   }
