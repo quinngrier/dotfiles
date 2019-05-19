@@ -50,7 +50,7 @@ eval $(
   uname=$(uname)
   readonly uname
 
-  case "$uname" in
+  case $uname in
     (*CYGWIN*)
       boot=$(WMIC OS GET LastBootUpTime | tr -d "\\r " | sed -n 2p)
     ;;
