@@ -52,10 +52,10 @@ eval $(
 
   case $uname in
     (*CYGWIN*)
-      boot=$(WMIC OS GET LastBootUpTime | tr -d "\\r " | sed -n 2p)
+      boot=$(WMIC OS GET LastBootUpTime | tr -d '\r ' | sed -n 2p)
     ;;
     (*)
-      boot=$(who -b | sed "s/.*boot//")
+      boot=$(who -b | sed 's/.*boot//')
       boot=$(date -d "$boot" +%s)
     ;;
   esac
@@ -69,8 +69,8 @@ eval $(
     echo . $1-$boot \;
   }
 
-  inherit_or_start ~/.bashrc-gpg-agent "gpg-agent --daemon" || :
-  inherit_or_start ~/.bashrc-ssh-agent "ssh-agent" || :
+  inherit_or_start ~/.bashrc-gpg-agent 'gpg-agent --daemon' || :
+  inherit_or_start ~/.bashrc-ssh-agent 'ssh-agent' || :
 
 )
 
