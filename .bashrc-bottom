@@ -66,7 +66,7 @@ eval $(
       rm -f "$1-"* || :
       eval "$2" >"$1-$boot"
     fi
-    echo . "$1-$boot" \;
+    cat "$1-$boot"
   }
 
   inherit_or_start ~/.bashrc-gpg-agent 'gpg-agent --daemon' || :
