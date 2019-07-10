@@ -47,7 +47,7 @@ PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 # whose names include $boot. We can then check whether the files exist
 # to decide whether the agents are already running. If the files exist,
 # we'll eval them to hook ourselves to the already running agents, and
-# if not, we'll start the agents and create the files.
+# if not, we'll start the agents and create the files first.
 #
 
 eval $(
