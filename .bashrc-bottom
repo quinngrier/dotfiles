@@ -69,8 +69,7 @@ eval $(
   readonly boot
 
   start_or_inherit() {
-    local x=~/.bashrc-$1
-    readonly x
+    local -r x=~/.bashrc-$1
     if [[ ! -f $x-$boot ]]; then
       rm -f $x-* || :
       eval "$@" >$x-$boot.tmp$$
