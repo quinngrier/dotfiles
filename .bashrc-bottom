@@ -42,6 +42,13 @@ PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 #
 # Set up gpg-agent and ssh-agent.
 #
+# The idea here is to create a string $boot that represents the system
+# boot time and store the agent hookup commands in some files in $HOME
+# whose names include $boot. We can then check whether the files exist
+# to decide whether the agents are already running. If the files exist,
+# we'll eval them to hook ourselves to the already running agents, and
+# if not, we'll start the agents and create the files.
+#
 
 eval $(
 
