@@ -69,15 +69,17 @@ eval $(
   readonly boot
 
   start_or_inherit() {
-    if [[ ! -f "$1-$boot" ]]; then
-      rm -f "$1-"* || :
-      eval "$2" >"$1-$boot"
+    local x=~/.bashrc-$1
+    readonly x
+    if [[ ! -f $x-$boot ]]; then
+      rm -f $x-* || :
+      eval "$@" >$x-$boot
     fi
-    cat "$1-$boot"
+    cat $x-$boot
   }
 
-  start_or_inherit ~/.bashrc-gpg-agent 'gpg-agent --daemon' || :
-  start_or_inherit ~/.bashrc-ssh-agent 'ssh-agent' || :
+  start_or_inherit gpg-agent --daemon || :
+  start_or_inherit ssh-agent || :
 
 )
 
