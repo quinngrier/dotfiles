@@ -73,7 +73,8 @@ eval $(
     readonly x
     if [[ ! -f $x-$boot ]]; then
       rm -f $x-* || :
-      eval "$@" >$x-$boot
+      eval "$@" >$x-$boot.tmp$$
+      mv $x-$boot.tmp$$ $x-$boot
     fi
     cat $x-$boot
   }
