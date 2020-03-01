@@ -51,13 +51,7 @@ PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 #
 
 eval $(
-
-  set -euo pipefail || exit 1
-
-  uname=$(uname)
-  readonly uname
-
-  case $uname in
+  case $(uname) in
     (*CYGWIN*)
       boot=$(WMIC OS GET LastBootUpTime | tr -d '\r ' | sed -n 2p)
     ;;
@@ -66,21 +60,16 @@ eval $(
       boot=$(date -d "$boot" +%s)
     ;;
   esac
-  readonly boot
-
   start_or_inherit() {
-    local -r x=~/.bashrc-$1
-    if [[ ! -f $x-$boot ]]; then
-      rm -f $x-* || :
-      eval "$@" >$x-$boot.tmp$$
-      mv $x-$boot.tmp$$ $x-$boot
+    local x="$HOME/.bashrc-$1"
+    if [[ ! -f "$x-$boot" ]]; then
+      rm -f "$x-"*
+      eval "$@" >"$x-$boot.$$" && mv "$x-$boot.$$" "$x-$boot"
     fi
-    cat $x-$boot
+    x=$(cat "$x-$boot") && printf '%s\n' "$x"
   }
-
-  start_or_inherit gpg-agent --daemon || :
-  start_or_inherit ssh-agent || :
-
+  start_or_inherit gpg-agent --daemon
+  start_or_inherit ssh-agent
 )
 
 GPG_TTY=$(tty)
