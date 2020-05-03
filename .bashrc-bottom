@@ -17,6 +17,12 @@
 #       /etc/skel/.bashrc
 #
 
+PATH=$HOME/bin:$PATH
+
+HISTFILESIZE=100000
+HISTSIZE=$HISTFILESIZE
+shopt -s cmdhist histappend lithist
+
 #
 # Set the prompt string and window title.
 #
