@@ -35,6 +35,11 @@
 #
 #       user@host:/current/working/directory
 #
+# Note the use of \e[K to clear from the cursor to the end of the line
+# instead of \e[2K to clear the entire line. Clearing the entire line
+# would destroy the last line of output of any program that doesn't
+# output a final newline character.
+#
 
 PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
 PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
