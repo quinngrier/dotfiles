@@ -43,7 +43,7 @@ shopt -s cmdhist histappend lithist
 #
 # Note the use of \e[K to clear from the cursor to the end of the line
 # instead of \e[2K to clear the entire line. Clearing the entire line
-# would destroy the last line of output of any program that doesn't
+# would damage the last line of output of any program that doesn't
 # output a final newline character.
 #
 
