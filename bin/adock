@@ -2,7 +2,7 @@
 #
 # Usage: adock [<argument>...]
 #
-# adock runs an asciidoctor/docker-asciidoctor container with the given
+# Runs an asciidoctor/docker-asciidoctor container with the given
 # arguments. The current working directory will be mapped into and used
 # as the current working directory in the container. The container will
 # inherit the current user and group IDs so that any files it produces

@@ -1,13 +1,20 @@
 #! /bin/sh -
+#
+# Usage: git c <message> [<argument>...]
+#
+# Makes a commit with the given <message>, failing if the subject line
+# is longer than 50 characters. Any additional arguments are passed
+# through to the underlying git commit command.
+#
 
 case $# in
   0)
     cat >&2 <<'EOF'
 Usage: git c <message> [<argument>...]
 
-Make a commit with the given <message>, failing if the subject line is
+Makes a commit with the given <message>, failing if the subject line is
 longer than 50 characters. Any additional arguments are passed through
-to git commit.
+to the underlying git commit command.
 EOF
     exit 1
   ;;
