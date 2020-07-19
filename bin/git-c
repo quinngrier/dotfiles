@@ -1,0 +1,42 @@
+#! /bin/sh -
+
+case $# in
+  0)
+    cat >&2 <<'EOF'
+Usage: git c <message> [<argument>...]
+
+Make a commit with the given <message>, failing if the subject line is
+longer than 50 characters. Any additional arguments are passed through
+to git commit.
+EOF
+    exit 1
+  ;;
+esac
+
+message=$1
+shift
+
+bad=`awk 'NR == 1 { print (length > 50 ? ":" : "false") }' <<EOF
+$message
+EOF
+` || exit $?
+
+if $bad; then
+  printf 'git-c: subject line is longer than 50 characters\n' >&2
+  exit 1
+fi
+
+case $# in
+  0) git commit -m "$message"      || exit $? ;;
+  *) git commit -m "$message" "$@" || exit $? ;;
+esac
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
