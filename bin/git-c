@@ -20,6 +20,8 @@ EOF
   ;;
 esac
 
+git=${_:?}
+
 message=$1
 shift
 
@@ -34,8 +36,8 @@ if $bad; then
 fi
 
 case $# in
-  0) git commit -m "$message"      || exit $? ;;
-  *) git commit -m "$message" "$@" || exit $? ;;
+  0) "$git" commit -m "$message"      || exit $? ;;
+  *) "$git" commit -m "$message" "$@" || exit $? ;;
 esac
 
 #

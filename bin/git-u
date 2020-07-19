@@ -17,11 +17,13 @@ EOF
   ;;
 esac
 
+git=${_:?}
+
 r=${1-upstream}
 b=${2-master}
-git checkout "$b" || exit $?
-git fetch -n -- "$r" "$b" || exit $?
-git merge -m "Merge $r/$b into $b" -- "$r/$b" || exit $?
+"$git" checkout "$b" || exit $?
+"$git" fetch -n -- "$r" "$b" || exit $?
+"$git" merge -m "Merge $r/$b into $b" -- "$r/$b" || exit $?
 
 #
 # The authors of this file have waived all copyright and
