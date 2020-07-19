@@ -2,7 +2,7 @@
 #
 # Usage: git u [<remote=upstream> [<branch=master>]]
 #
-# Checks out <branch>, then fetches and merges from <remote>.
+# Checks out <branch>, then fetches and merges it from <remote>.
 #
 
 case $# in
@@ -11,7 +11,7 @@ case $# in
     cat >&2 <<'EOF'
 Usage: git u [<remote=upstream> [<branch=master>]]
 
-Checks out <branch>, then fetches and merges from <remote>.
+Checks out <branch>, then fetches and merges it from <remote>.
 EOF
     exit 1
   ;;
@@ -19,11 +19,12 @@ esac
 
 git=${_:?}
 
-r=${1-upstream}
-b=${2-master}
-"$git" checkout "$b" || exit $?
-"$git" fetch -n -- "$r" "$b" || exit $?
-"$git" merge -m "Merge $r/$b into $b" -- "$r/$b" || exit $?
+remote=${1-upstream}
+branch=${2-master}
+message="Merge $remote/$branch into $branch"
+"$git" checkout "$branch" || exit $?
+"$git" fetch -n -- "$remote" "$branch" || exit $?
+"$git" merge -m "$message" -- "$remote/$branch" || exit $?
 
 #
 # The authors of this file have waived all copyright and
