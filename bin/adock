@@ -1,4 +1,4 @@
-#! /bin/bash -
+#! /bin/sh -
 #
 # Usage: adock [<arg>...]
 #
@@ -10,6 +10,12 @@
 #
 # See <https://hub.docker.com/r/asciidoctor/docker-asciidoctor/> for
 # more information about the asciidoctor/docker-asciidoctor image.
+#
+# You can change the docker command by setting the DOCKER environment
+# variable. The content of the variable will be evaluated by the shell.
+#
+# You can change the container image by setting the ADOCK_IMAGE
+# environment variable.
 #
 # Example 1:
 #
@@ -23,15 +29,26 @@
 #
 #       adock asciidoctor-pdf README.adoc
 #
+# Example 3:
+#
+# The following command will compile README.adoc into README.html,
+# running docker with sudo:
+#
+#       DOCKER="sudo docker" adock asciidoctor README.adoc
+#
 
-set -e -u
-
-[[ -t 1 ]] && t=-t || t=
-u=$(id -u)
-g=$(id -g)
-image=asciidoctor/docker-asciidoctor
-
-docker run -i $t -u $u:$g -v "$PWD":/x -w /x --rm $image "$@"
+docker=${DOCKER:-docker}
+[ -t 1 ] && t=-t || t=
+u=`id -u` || exit $?
+g=`id -g` || exit $?
+pwd=`pwd` || exit $?
+image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
+case $# in
+  0) eval "$docker"' run --rm -i $t -u $u:$g \
+                     -v "$pwd":/x -w /x "$image"'      || exit $? ;;
+  *) eval "$docker"' run --rm -i $t -u $u:$g \
+                     -v "$pwd":/x -w /x "$image" "$@"' || exit $? ;;
+esac
 
 #
 # The authors of this file have waived all copyright and
