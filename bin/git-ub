@@ -2,7 +2,7 @@
 #
 # Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 #
-# Checks out <start>, then fetches and merges it from <remote>, then
+# Switches to <start>, then fetches and merges it from <remote>, then
 # starts <branch> from it. If <branch> already exists as an ancestor of
 # <start>, then it will be recreated.
 #
@@ -13,7 +13,7 @@ case $# in
     cat >&2 <<'EOF'
 Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 
-Checks out <start>, then fetches and merges it from <remote>, then
+Switches to <start>, then fetches and merges it from <remote>, then
 starts <branch> from it. If <branch> already exists as an ancestor of
 <start>, then it will be recreated.
 EOF

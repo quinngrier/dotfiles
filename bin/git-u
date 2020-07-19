@@ -2,7 +2,7 @@
 #
 # Usage: git u [<remote=upstream> [<branch=master>]]
 #
-# Checks out <branch>, then fetches and merges it from <remote>.
+# Switches to <branch>, then fetches and merges it from <remote>.
 #
 
 case $# in
@@ -11,7 +11,7 @@ case $# in
     cat >&2 <<'EOF'
 Usage: git u [<remote=upstream> [<branch=master>]]
 
-Checks out <branch>, then fetches and merges it from <remote>.
+Switches to <branch>, then fetches and merges it from <remote>.
 EOF
     exit 1
   ;;
