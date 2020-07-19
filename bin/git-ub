@@ -2,9 +2,9 @@
 #
 # Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 #
-# Switches to <start>, then fetches and merges it from <remote>, then
-# starts <branch> from it. If <branch> already exists as an ancestor of
-# <start>, then it will be recreated.
+# Switches to branch <start>, then fetches and merges it from <remote>,
+# then starts <branch> from it. <branch> will be recreated if it already
+# exists as an ancestor of <start>.
 #
 
 case $# in
@@ -13,9 +13,9 @@ case $# in
     cat >&2 <<'EOF'
 Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 
-Switches to <start>, then fetches and merges it from <remote>, then
-starts <branch> from it. If <branch> already exists as an ancestor of
-<start>, then it will be recreated.
+Switches to branch <start>, then fetches and merges it from <remote>,
+then starts <branch> from it. <branch> will be recreated if it already
+exists as an ancestor of <start>.
 EOF
     exit 1
   ;;
