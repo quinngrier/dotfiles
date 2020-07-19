@@ -23,8 +23,8 @@ remote=${1-upstream}
 branch=${2-master}
 message="Merge $remote/$branch into $branch"
 "$git" checkout "$branch" || exit $?
-"$git" fetch -n -- "$remote" "$branch" || exit $?
-"$git" merge -m "$message" -- "$remote/$branch" || exit $?
+"$git" fetch -n "$remote" "$branch" || exit $?
+"$git" merge -m "$message" "$remote/$branch" || exit $?
 
 #
 # The authors of this file have waived all copyright and

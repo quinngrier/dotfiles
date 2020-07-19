@@ -8,11 +8,11 @@
 # inherit the current user and group IDs so that any files it produces
 # will have the appropriate ownership.
 #
-# See <https://hub.docker.com/r/asciidoctor/docker-asciidoctor/> for
-# more information about the asciidoctor/docker-asciidoctor image.
+# See <https://hub.docker.com/r/asciidoctor/docker-asciidoctor> for more
+# information about the asciidoctor/docker-asciidoctor image.
 #
 # You can change the docker command by setting the DOCKER environment
-# variable. The content of the variable will be evaluated by the shell.
+# variable. The content of this variable will be evaluated by the shell.
 #
 # You can change the container image by setting the ADOCK_IMAGE
 # environment variable.
@@ -34,7 +34,7 @@
 # The following command will compile README.adoc into README.html,
 # running docker with sudo:
 #
-#       DOCKER="sudo docker" adock asciidoctor README.adoc
+#       DOCKER='sudo docker' adock asciidoctor README.adoc
 #
 
 docker=${DOCKER:-docker}
