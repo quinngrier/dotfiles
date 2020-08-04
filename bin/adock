@@ -43,11 +43,13 @@
 docker=${DOCKER:-docker}
 readonly docker
 
+image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
+readonly image
+
 [ -t 1 ] && t=-t || t=
 u=`id -u` || exit $?
 g=`id -g` || exit $?
 pwd=`pwd` || exit $?
-image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
 if ${ADOCK_PULL:+:} false; then
   eval "$docker"' pull "$image"' || exit $?
 fi
