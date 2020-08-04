@@ -41,6 +41,8 @@
 #
 
 docker=${DOCKER:-docker}
+readonly docker
+
 [ -t 1 ] && t=-t || t=
 u=`id -u` || exit $?
 g=`id -g` || exit $?
