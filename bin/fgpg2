@@ -1,6 +1,6 @@
 #! /bin/sh -
 #
-# Usage: f-gpg2 [<arg>...]
+# Usage: fgpg2 [<arg>...]
 #
 # Finds and runs gpg2 with the given arguments.
 #
