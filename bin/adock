@@ -1,6 +1,6 @@
 #! /bin/sh -
 #
-# Usage: adock [<argument>...]
+# Usage: adock [<arg>...]
 #
 # Runs an asciidoctor/docker-asciidoctor container with the given
 # arguments. The current working directory will be mapped into and used

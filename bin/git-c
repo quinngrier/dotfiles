@@ -1,6 +1,6 @@
 #! /bin/sh -
 #
-# Usage: git c <message> [<argument>...]
+# Usage: git c <message> [<arg>...]
 #
 # Makes a commit with the given <message>, failing if the subject line
 # is longer than 50 characters. Any additional arguments are passed
@@ -10,7 +10,7 @@
 case $# in
   0)
     cat >&2 <<'EOF'
-Usage: git c <message> [<argument>...]
+Usage: git c <message> [<arg>...]
 
 Makes a commit with the given <message>, failing if the subject line is
 longer than 50 characters. Any additional arguments are passed through
