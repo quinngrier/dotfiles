@@ -12,10 +12,13 @@
 # information about the asciidoctor/docker-asciidoctor image.
 #
 # You can change the docker command by setting the DOCKER environment
-# variable. The content of this variable will be evaluated by the shell.
+# variable. The value will be evaluated by the shell.
 #
 # You can change the container image by setting the ADOCK_IMAGE
 # environment variable.
+#
+# You can force the newest container image to be pulled by setting the
+# ADOCK_PULL environment variable to any nonempty value.
 #
 # Example 1:
 #
