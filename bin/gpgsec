@@ -1,0 +1,82 @@
+#! /bin/sh -
+#
+# Usage: gpgsec <name> [<value>]
+#
+# Stores and retrieves GPG-encrypted secrets to and from the ~/.gpgsec
+# directory.
+#
+
+case $# in
+  1 | 2)
+    :
+  ;;
+  *)
+    cat >&2 <<'EOF'
+usage: gpgsec <name> [<value>]
+EOF
+    exit 1
+  ;;
+esac
+
+name=$1
+readonly name
+
+case $name in
+  ../* | */../*)
+    cat >&2 <<'EOF'
+gpgsec: illegal name
+EOF
+    exit 1
+  ;;
+esac
+
+file=$HOME/.gpgsec/$name.gpg
+readonly file
+
+case $# in
+  1)
+    fgpg2 -d <"$file"
+    exit $?
+  ;;
+esac
+
+value=$2
+readonly value
+
+case $value in
+  '')
+    rm -f "$file"
+    exit $?
+  ;;
+esac
+
+if test -f "$file"; then
+  :
+else
+  umask 077 || exit $?
+  mkdir -p "$file" || exit $?
+  rmdir "$file" || exit $?
+fi
+
+case $value in
+  -)
+    fgpg2 -e --default-recipient-self -s -a >"$file"
+    exit $?
+  ;;
+  *)
+    fgpg2 -e --default-recipient-self -s -a >"$file" <<EOF
+$value
+EOF
+    exit $?
+  ;;
+esac
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
