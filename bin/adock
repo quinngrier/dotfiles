@@ -43,11 +43,19 @@ u=`id -u` || exit $?
 g=`id -g` || exit $?
 pwd=`pwd` || exit $?
 image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
+if ${ADOCK_PULL:+:} false; then
+  eval "$docker"' pull "$image"' || exit $?
+fi
+args='run --rm -i $t -u $u:$g -v "$pwd":/x -w /x "$image"'
 case $# in
-  0) eval "$docker"' run --rm -i $t -u $u:$g \
-                     -v "$pwd":/x -w /x "$image"'      || exit $? ;;
-  *) eval "$docker"' run --rm -i $t -u $u:$g \
-                     -v "$pwd":/x -w /x "$image" "$@"' || exit $? ;;
+  0)
+    eval "$docker $args"
+    exit $?
+  ;;
+  *)
+    eval "$docker $args"' "$@"'
+    exit $?
+  ;;
 esac
 
 #
