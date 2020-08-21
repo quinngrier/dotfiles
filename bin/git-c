@@ -20,9 +20,11 @@ EOF
   ;;
 esac
 
-git=${_:?}
+git=" ${GIT:-git}"
+readonly git
 
 message=$1
+readonly message
 shift
 
 excess=`awk 'NR == 1 { if (length > 50) print length - 50 }' <<EOF
@@ -43,8 +45,14 @@ case $excess in
 esac
 
 case $# in
-  0) "$git" commit -m "$message"      || exit $? ;;
-  *) "$git" commit -m "$message" "$@" || exit $? ;;
+  0)
+    eval "$git"' commit -m "$message"'
+    exit $?
+  ;;
+  *)
+    eval "$git"' commit -m "$message" "$@"'
+    exit $?
+  ;;
 esac
 
 #
