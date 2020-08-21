@@ -25,15 +25,22 @@ git=${_:?}
 message=$1
 shift
 
-bad=`awk 'NR == 1 { print (length > 50 ? ":" : "false") }' <<EOF
+excess=`awk 'NR == 1 { if (length > 50) print length - 50 }' <<EOF
 $message
 EOF
 ` || exit $?
+readonly excess
 
-if $bad; then
-  printf 'git-c: subject line is longer than 50 characters\n' >&2
-  exit 1
-fi
+case $excess in
+  1)
+    printf 'Subject line is 1 character too long.\n' >&2
+    exit 1
+  ;;
+  ?*)
+    printf 'Subject line is %d characters too long.\n' $excess >&2
+    exit 1
+  ;;
+esac
 
 case $# in
   0) "$git" commit -m "$message"      || exit $? ;;
