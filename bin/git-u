@@ -5,26 +5,37 @@
 # Switches to <branch>, then fetches and merges it from <remote>.
 #
 
-case $# in
-  0 | 1 | 2) ;;
-  *)
-    cat >&2 <<'EOF'
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
 Usage: git u [<remote=upstream> [<branch=master>]]
 
 Switches to <branch>, then fetches and merges it from <remote>.
+EOF
+    exit 0
+  ;;
+  0, | 1,* | 2,*)
+    :
+  ;;
+  *)
+    cat >&2 <<'EOF'
+Bad usage. Try "git u --help".
 EOF
     exit 1
   ;;
 esac
 
-git=${_:?}
+git=" ${GIT:-git}"
+readonly git
 
 remote=${1-upstream}
 branch=${2-master}
 message="Merge $remote/$branch into $branch"
-"$git" checkout "$branch" || exit $?
-"$git" fetch -n "$remote" "$branch" || exit $?
-"$git" merge -m "$message" "$remote/$branch" || exit $?
+eval "$git"' checkout "$branch"' || exit $?
+eval "$git"' fetch -n "$remote" "$branch"' || exit $?
+eval "$git"' merge -m "$message" "$remote/$branch"' || exit $?
+
+exit 0
 
 #
 # The authors of this file have waived all copyright and

@@ -7,14 +7,20 @@
 # through to the underlying git commit command.
 #
 
-case $# in
-  0)
-    cat >&2 <<'EOF'
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
 Usage: git c <message> [<arg>...]
 
 Makes a commit with the given <message>, failing if the subject line is
 longer than 50 characters. Any additional arguments are passed through
 to the underlying git commit command.
+EOF
+    exit 0
+  ;;
+  0,)
+    cat >&2 <<'EOF'
+Bad usage. Try "git c --help".
 EOF
     exit 1
   ;;
@@ -35,11 +41,15 @@ readonly excess
 
 case $excess in
   1)
-    printf 'Subject line is 1 character too long.\n' >&2
+    cat >&2 <<'EOF'
+Subject line is 1 character too long.
+EOF
     exit 1
   ;;
   ?*)
-    printf 'Subject line is %d characters too long.\n' $excess >&2
+    cat >&2 <<EOF
+Subject line is $excess characters too long.
+EOF
     exit 1
   ;;
 esac

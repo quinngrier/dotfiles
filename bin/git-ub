@@ -7,34 +7,45 @@
 # exists as an ancestor of <start>.
 #
 
-case $# in
-  1 | 2 | 3) ;;
-  *)
-    cat >&2 <<'EOF'
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
 Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 
 Switches to branch <start>, then fetches and merges it from <remote>,
 then starts <branch> from it. <branch> will be recreated if it already
 exists as an ancestor of <start>.
 EOF
+    exit 0
+  ;;
+  1,* | 2,* | 3,*)
+    :
+  ;;
+  *)
+    cat >&2 <<'EOF'
+Bad usage. Try "git ub --help".
+EOF
     exit 1
   ;;
 esac
 
-git=${_:?}
+git=" ${GIT:-git}"
+readonly git
 
 branch=$1
 remote=${2-upstream}
 start=${3-master}
-"$git" u "$remote" "$start" || exit $?
-"$git" rev-parse --verify -q "$branch"
+eval "$git"' u "$remote" "$start"' || exit $?
+eval "$git"' rev-parse --verify -q "$branch"'
 s=$?
 case $s in
-  0) "$git" branch -d "$branch" || exit $? ;;
+  0) eval "$git"' branch -d "$branch"' || exit $? ;;
   1) ;;
   *) exit $s ;;
 esac
-"$git" checkout -b "$branch" || exit $?
+eval "$git"' checkout -b "$branch"' || exit $?
+
+exit 0
 
 #
 # The authors of this file have waived all copyright and

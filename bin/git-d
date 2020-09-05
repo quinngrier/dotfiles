@@ -19,7 +19,7 @@ EOF
   ;;
   *)
     cat >&2 <<'EOF'
-git-d: bad usage, try --help
+Bad usage. Try "git d --help".
 EOF
     exit 1
   ;;
@@ -52,7 +52,7 @@ for branch; do
   esac
   hash=`eval "$git"' rev-parse --short "$branch"'` || exit $?
   cat <<EOF || exit $?
-deleting $branch ($hash)
+Deleting $branch ($hash).
 EOF
   eval "$git"' update-ref -d "$branch"' || exit $?
 done
