@@ -15,7 +15,7 @@ encrypted and stored to ~/.gpgsec/<name>.
 
 GnuPG 2 must already be installed and a default-key must already be set
 up in ~/.gnupg/gpg.conf. The --default-recipient-self option is used to
-encrypt the secrets. The fgpg2 script must also already be installed
+perform the encryption. The fgpg2 script must also already be installed
 (see <https://gitlab.com/quinngrier/dotfiles/-/blob/master/bin/fgpg2>).
 EOF
     exit 0
