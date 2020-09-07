@@ -8,10 +8,10 @@ Usage: gpgsec <name> [<value>]
 Stores and retrieves GPG-encrypted secrets to and from the ~/.gpgsec
 directory.
 
-If <value> is not given, the ~/.gpgsec/<name> file is decrypted and
+If <value> is not given, the ~/.gpgsec/<name>.gpg file is decrypted and
 written to standard output. Otherwise, if <value> is the empty string,
-the ~/.gpgsec/<name> file is deleted with rm -f. Otherwise, <value> is
-encrypted and stored to ~/.gpgsec/<name>.
+the ~/.gpgsec/<name>.gpg file is deleted. Otherwise, <value> is
+encrypted and stored to the ~/.gpgsec/<name>.gpg file.
 
 GnuPG 2 must already be installed and a default-key must already be set
 up in ~/.gnupg/gpg.conf. The --default-recipient-self option is used to
