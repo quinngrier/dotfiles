@@ -1,18 +1,31 @@
 #! /bin/sh -
-#
-# Usage: gpgsec <name> [<value>]
-#
-# Stores and retrieves GPG-encrypted secrets to and from the ~/.gpgsec
-# directory.
-#
 
-case $# in
-  1 | 2)
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
+Usage: gpgsec <name> [<value>]
+
+Stores and retrieves GPG-encrypted secrets to and from the ~/.gpgsec
+directory.
+
+If <value> is not given, the ~/.gpgsec/<name> file is decrypted and
+written to standard output. Otherwise, if <value> is the empty string,
+the ~/.gpgsec/<name> file is deleted with rm -f. Otherwise, <value> is
+encrypted and stored to ~/.gpgsec/<name>.
+
+GnuPG 2 must already be installed and a default-key must already be set
+up in ~/.gnupg/gpg.conf. The --default-recipient-self option is used to
+encrypt the secrets. The fgpg2 script must also already be installed
+(see <https://gitlab.com/quinngrier/dotfiles/-/blob/master/bin/fgpg2>).
+EOF
+    exit 0
+  ;;
+  1,* | 2,*)
     :
   ;;
   *)
     cat >&2 <<'EOF'
-usage: gpgsec <name> [<value>]
+gpgsec: bad usage, try gpgsec --help
 EOF
     exit 1
   ;;
