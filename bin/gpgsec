@@ -1,5 +1,7 @@
 #! /bin/sh -
 
+export LC_ALL=C
+
 case $#,$1 in
   1,--help)
     cat <<'EOF'

@@ -5,6 +5,8 @@
 # Finds and runs gpg1 with the given arguments.
 #
 
+export LC_ALL=C
+
 gpg1=gpg1
 if ${GPG1:+:} false; then
   gpg1=$GPG1

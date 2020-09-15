@@ -5,6 +5,8 @@
 # Switches to <branch>, then fetches and merges it from <remote>.
 #
 
+export LC_ALL=C
+
 case $#,$1 in
   1,--help)
     cat <<'EOF'

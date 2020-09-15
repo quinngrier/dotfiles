@@ -40,6 +40,8 @@
 #       DOCKER='sudo docker' adock asciidoctor README.adoc
 #
 
+export LC_ALL=C
+
 docker=" ${DOCKER:-docker}"
 readonly docker
 

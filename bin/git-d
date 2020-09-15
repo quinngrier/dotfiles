@@ -5,6 +5,8 @@
 # Deletes all branches that are reachable from <commit>.
 #
 
+export LC_ALL=C
+
 case $#,$1 in
   1,--help)
     cat <<'EOF'
