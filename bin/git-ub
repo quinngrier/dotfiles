@@ -25,7 +25,7 @@ EOF
   ;;
   *)
     cat >&2 <<'EOF'
-Bad usage. Try "git ub --help".
+Bad usage. Try "git-ub --help" (but not "git ub --help").
 EOF
     exit 1
   ;;

@@ -16,7 +16,7 @@ EOF
   ;;
   *)
     cat >&2 <<'EOF'
-s: bad usage, try "s --help"
+Bad usage. Try "s --help".
 EOF
     exit 1
   ;;
