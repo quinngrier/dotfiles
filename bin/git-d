@@ -17,7 +17,7 @@ EOF
   ;;
   *)
     cat <<'EOF' >&2
-Bad usage. Try "git-d --help" (but not "git d --help").
+Bad usage. Try "git-d --help" (not "git d --help").
 EOF
     exit 1
   ;;
