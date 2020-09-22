@@ -21,7 +21,7 @@ EOF
     exit 0
   ;;
   0,)
-    cat >&2 <<'EOF'
+    cat <<'EOF' >&2
 Bad usage. Try "git-c --help" (but not "git c --help").
 EOF
     exit 1
@@ -43,7 +43,7 @@ readonly excess
 
 case $excess in
   1)
-    cat >&2 <<'EOF'
+    cat <<'EOF' >&2
 Subject line is 1 character too long.
 EOF
     exit 1

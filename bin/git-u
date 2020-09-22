@@ -20,7 +20,7 @@ EOF
     :
   ;;
   *)
-    cat >&2 <<'EOF'
+    cat <<'EOF' >&2
 Bad usage. Try "git-u --help" (but not "git u --help").
 EOF
     exit 1
