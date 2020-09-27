@@ -34,8 +34,6 @@ alias s='s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs"'
 
 #-----------------------------------------------------------------------
 
-PATH=$HOME/bin:$PATH
-
 HISTFILESIZE=100000
 HISTSIZE=$HISTFILESIZE
 shopt -s cmdhist histappend lithist
