@@ -1,3 +1,11 @@
+#
+# Note that the master copy of the default ~/.bash_profile file can
+# sometimes be found at one of the following locations:
+#
+#       /etc/defaults/etc/skel/.bash_profile
+#       /etc/skel/.bash_profile
+#
+
 PATH=$HOME/bin:$PATH
 export PATH
 

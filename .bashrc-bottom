@@ -14,6 +14,7 @@
 # Note that the master copy of the default ~/.bashrc file can sometimes
 # be found at one of the following locations:
 #
+#       /etc/defaults/etc/skel/.bashrc
 #       /etc/skel/.bashrc
 #
 
