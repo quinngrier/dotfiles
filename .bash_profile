@@ -1,5 +1,5 @@
 #
-# Note that the master copy of the default ~/.bash_profile file can
+# If a default ~/.bash_profile file exists, the master copy can
 # sometimes be found at one of the following locations:
 #
 #       /etc/defaults/etc/skel/.bash_profile

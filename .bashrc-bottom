@@ -11,8 +11,8 @@
 # the above small change on each system than it is to make a portable
 # ~/.bashrc file that reasonably subsumes all default ~/.bashrc files.
 #
-# Note that the master copy of the default ~/.bashrc file can sometimes
-# be found at one of the following locations:
+# If a default ~/.bashrc file exists, the master copy can sometimes be
+# found at one of the following locations:
 #
 #       /etc/defaults/etc/skel/.bashrc
 #       /etc/skel/.bashrc
