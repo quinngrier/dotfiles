@@ -1,22 +1,15 @@
 #! /bin/sh -
-#
-# Usage: git c <message> [<arg>...]
-#
-# Makes a commit with the given <message>, failing if the subject line
-# is longer than 50 characters. Any additional arguments are passed
-# through to the underlying git commit command.
-#
 
 export LC_ALL=C
 
 case $#,$1 in
   1,--help)
     cat <<'EOF'
-Usage: git c <message> [<arg>...]
+Usage: git c <message> [<argument>...]
 
 Makes a commit with the given <message>, failing if the subject line is
 longer than 50 characters. Any additional arguments are passed through
-to the underlying git commit command.
+to the underlying "git commit" command.
 EOF
     exit 0
   ;;
@@ -28,14 +21,13 @@ EOF
   ;;
 esac
 
-git=" ${GIT:-git}"
-readonly git
+readonly awk="${AWK:-awk}"
+readonly git="${GIT:-git}"
 
-message=$1
-readonly message
+readonly message="$1"
 shift
 
-excess=`awk 'NR == 1 { if (length > 50) print length - 50 }' <<EOF
+excess=`eval " $awk"' "NR == 1 { print length - 50 }"' <<EOF
 $message
 EOF
 ` || exit $?
@@ -48,8 +40,8 @@ Subject line is 1 character too long.
 EOF
     exit 1
   ;;
-  ?*)
-    cat >&2 <<EOF
+  [1-9]*)
+    cat <<EOF >&2
 Subject line is $excess characters too long.
 EOF
     exit 1
@@ -57,14 +49,8 @@ EOF
 esac
 
 case $# in
-  0)
-    eval "$git"' commit -m "$message"'
-    exit $?
-  ;;
-  *)
-    eval "$git"' commit -m "$message" "$@"'
-    exit $?
-  ;;
+  0) eval " $git"' commit -m "$message"'     ; exit $? ;;
+  *) eval " $git"' commit -m "$message" "$@"'; exit $? ;;
 esac
 
 #

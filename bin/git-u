@@ -1,9 +1,4 @@
 #! /bin/sh -
-#
-# Usage: git u [<remote=upstream> [<branch=master>]]
-#
-# Switches to <branch>, then fetches and merges it from <remote>.
-#
 
 export LC_ALL=C
 
@@ -27,15 +22,16 @@ EOF
   ;;
 esac
 
-git=" ${GIT:-git}"
-readonly git
+readonly git="${GIT:-git}"
 
-remote=${1-upstream}
-branch=${2-master}
-message="Merge $remote/$branch into $branch"
-eval "$git"' checkout "$branch"' || exit $?
-eval "$git"' fetch -n "$remote" "$branch"' || exit $?
-eval "$git"' merge -m "$message" "$remote/$branch"' || exit $?
+readonly remote="${1-upstream}"
+readonly branch="${2-master}"
+
+readonly message="Merge $remote/$branch into $branch"
+
+eval " $git"' checkout "$branch"' || exit $?
+eval " $git"' fetch -n "$remote" "$branch"' || exit $?
+eval " $git"' merge -m "$message" "$remote/$branch"' || exit $?
 
 exit 0
 
