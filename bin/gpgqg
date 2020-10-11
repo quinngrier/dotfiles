@@ -3,10 +3,10 @@
 case $#,$1 in
   1,--help)
     cat <<'EOF'
-Usage: gpgqg <file> <name> [<passphrase> [<algo=rsa4096>
-                             [<usage=sign> [<expire=never>]]]]
+Usage: gpgqg <file> <user_id> [<passphrase> [<algo=rsa4096>
+                                [<usage=sign> [<expire=never>]]]]
 
-Generate a GPG keypair <file> and <file>.pub with <name> as the user ID.
+Generate a GPG keypair <file> and <file>.pub with user ID <user_id>.
 Omitting <passphrase> or setting it to the empty string will generate a
 key with no passphrase. Setting <passphrase> to "-" will cause it to be
 read from standard input. <algo>, <usage>, and <expire> have the same
@@ -19,7 +19,7 @@ EOF
   ;;
   *)
     cat <<'EOF' >&2
-gpgqg: bad usage, try gpgqg --help
+gpgqg: bad usage, try "gpgqg --help"
 EOF
     exit 1
   ;;
@@ -29,8 +29,8 @@ file=$1
 case $file in /*) : ;; *) file=./$file ;; esac
 readonly file
 
-name=$2
-readonly name
+user_id=$2
+readonly user_id
 
 passphrase=$3
 readonly passphrase
@@ -49,14 +49,6 @@ case $homedir in /*) : ;; *) homedir=./$homedir ;; esac
 readonly homedir
 trap 'rm -f -r "$homedir"' 0
 
-gpg2='gpg2'
-gpg2=$gpg2' --batch'
-gpg2=$gpg2' --homedir "$homedir"'
-gpg2=$gpg2' --no-tty'
-gpg2=$gpg2' --pinentry-mode loopback'
-gpg2=$gpg2' --quiet'
-readonly gpg2
-
 if [ -f "$file" ]; then
   :
 elif [ -r "$file" ]; then
@@ -65,8 +57,8 @@ gpgqg: not a file: $file
 EOF
   exit 1
 else
-  mkdir -p "$file"
-  rmdir "$file"
+  mkdir -p "$file" || exit $?
+  rmdir "$file" || exit $?
 fi
 
 if [ -f "$file.pub" ]; then
@@ -78,14 +70,22 @@ EOF
   exit 1
 fi
 
+gpg2='gpg2'
+gpg2=$gpg2' --batch'
+gpg2=$gpg2' --homedir "$homedir"'
+gpg2=$gpg2' --no-tty'
+gpg2=$gpg2' --pinentry-mode loopback'
+gpg2=$gpg2' --quiet'
+readonly gpg2
+
 case $passphrase in
   -)
     eval "$gpg2"' --passphrase-fd 0 --quick-generate-key \
-                  "$name" "$algo" "$usage" "$expire"' || exit $?
+                  "$user_id" "$algo" "$usage" "$expire"' || exit $?
   ;;
   *)
     eval "$gpg2"' --passphrase-fd 0 --quick-generate-key \
-                  "$name" "$algo" "$usage" "$expire" <<EOF
+                  "$user_id" "$algo" "$usage" "$expire" <<EOF
 $passphrase
 EOF
 ' || exit $?
