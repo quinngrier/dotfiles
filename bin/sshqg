@@ -69,15 +69,16 @@ EOF
   exit 1
 fi
 
+# Prevent ssh-keygen from asking the user to overwrite.
+rm -f "$file" || exit $?
+
 case $passphrase in
   -)
     x=`cat` || exit $?
-    rm -f "$file"
     ssh-keygen $algo_flags -C "$comment" \
                -q -f "$file" -N "$x" || exit $?
   ;;
   *)
-    rm -f "$file"
     ssh-keygen $algo_flags -C "$comment" \
                -q -f "$file" -N "$passphrase" || exit $?
   ;;
