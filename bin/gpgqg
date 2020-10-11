@@ -39,6 +39,7 @@ gpg2=$gpg2' --batch'
 gpg2=$gpg2' --homedir "$homedir"'
 gpg2=$gpg2' --no-tty'
 gpg2=$gpg2' --pinentry-mode loopback'
+gpg2=$gpg2' --quiet'
 readonly gpg2
 
 eval "$gpg2"' \
