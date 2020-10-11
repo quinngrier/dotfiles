@@ -1,0 +1,66 @@
+#! /bin/sh -
+
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
+Usage: gpgqg <name> [<algo=rsa4096> [<passphrase>]]
+
+Generate a GPG key and write its secret key to standard output.
+EOF
+    exit 0
+  ;;
+  1,* | 2,* | 3,*)
+    :
+  ;;
+  *)
+    cat <<'EOF' >&2
+gpgqg: bad usage, try gpgqg --help
+EOF
+    exit 1
+  ;;
+esac
+
+name=$1
+readonly name
+
+algo=${2-rsa4096}
+readonly algo
+
+passphrase=$3
+readonly passphrase
+
+homedir=`mktemp -d` || exit $?
+case $homedir in /*) : ;; *) homedir=./$homedir ;; esac
+readonly homedir
+trap 'rm -f -r "$homedir"' 0
+
+gpg2='gpg2'
+gpg2=$gpg2' --batch'
+gpg2=$gpg2' --homedir "$homedir"'
+gpg2=$gpg2' --no-tty'
+gpg2=$gpg2' --pinentry-mode loopback'
+readonly gpg2
+
+eval "$gpg2"' \
+  --passphrase "$passphrase" \
+  --quick-generate-key \
+  "$name" \
+  "$algo" \
+;' || exit $?
+
+eval "$gpg2"' \
+  --armor \
+  --export-secret-keys \
+;' || exit $?
+
+exit 0
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
