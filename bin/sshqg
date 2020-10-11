@@ -1,0 +1,94 @@
+#! /bin/sh -
+
+case $#,$1 in
+  1,--help)
+    cat <<'EOF'
+Usage: sshqg <file> <comment> [<passphrase> [<algo=rsa4096>]]
+
+Generate an SSH keypair <file> and <file>.pub with comment <comment>.
+Omitting <passphrase> or setting it to the empty string will generate a
+key with no passphrase. Setting <passphrase> to "-" will cause it to be
+read from standard input. The following values are accepted for <algo>:
+rsa4096.
+EOF
+    exit 0
+  ;;
+  [2-4],*)
+    :
+  ;;
+  *)
+    cat <<'EOF' >&2
+sshqg: bad usage, try "sshqg --help"
+EOF
+    exit 1
+  ;;
+esac
+
+file=$1
+case $file in /*) : ;; *) file=./$file ;; esac
+readonly file
+
+comment=$2
+readonly comment
+
+passphrase=$3
+readonly passphrase
+
+algo=${4-rsa4096}
+readonly algo
+
+case $algo in
+  rsa4096) algo_flags='-t rsa -b 4096' ;;
+  *)
+    cat <<EOF >&2
+sshqg: unknown <algo>: $algo
+EOF
+    exit 1
+  ;;
+esac
+readonly algo_flags
+
+if [ -f "$file" ]; then
+  :
+elif [ -r "$file" ]; then
+  cat <<EOF >&2
+sshqg: not a file: $file
+EOF
+  exit 1
+else
+  mkdir -p "$file"
+  rmdir "$file"
+fi
+
+if [ -f "$file.pub" ]; then
+  :
+elif [ -r "$file.pub" ]; then
+  cat <<EOF >&2
+sshqg: not a file: $file.pub
+EOF
+  exit 1
+fi
+
+case $passphrase in
+  -)
+    x=`cat` || exit $?
+    ssh-keygen $algo_flags -C "$comment" \
+               -f "$file" -N "$x" || exit $?
+  ;;
+  *)
+    ssh-keygen $algo_flags -C "$comment" \
+               -f "$file" -N "$passphrase" || exit $?
+  ;;
+esac
+
+exit 0
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
