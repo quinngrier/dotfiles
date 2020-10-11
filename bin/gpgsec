@@ -7,13 +7,15 @@ case $#,$1 in
     cat <<'EOF'
 Usage: gpgsec <name> [<value>]
 
-Stores and retrieves GPG-encrypted secrets to and from the ~/.gpgsec
-directory.
+Manages GPG-encrypted secrets in the ~/.gpgsec directory.
 
-If <value> is not given, the ~/.gpgsec/<name>.gpg file is decrypted and
-written to standard output. Otherwise, if <value> is the empty string,
-the ~/.gpgsec/<name>.gpg file is deleted. Otherwise, <value> is
-encrypted and stored to the ~/.gpgsec/<name>.gpg file.
+If <value> is omitted, the ~/.gpgsec/<name>.gpg file will be decrypted
+and written to standard output. Otherwise, if <value> is empty, the file
+will be deleted. Otherwise, <value> will be encrypted and stored to the
+file. If <value> is "-", it will be read from standard input.
+
+<name> may freely contain directory components, allowing secrets to be
+organized into directories.
 
 gpg2 must already be installed and a default-key must already be set up
 in ~/.gnupg/gpg.conf. The --default-recipient-self option will be used
@@ -21,12 +23,12 @@ to perform the encryption.
 EOF
     exit 0
   ;;
-  1,* | 2,*)
+  [1-2],*)
     :
   ;;
   *)
     cat <<'EOF' >&2
-gpgsec: bad usage, try gpgsec --help
+gpgsec: bad usage, try "gpgsec --help"
 EOF
     exit 1
   ;;
@@ -38,7 +40,7 @@ readonly name
 case $name in
   .. | ../* | */../* | */..)
     cat <<'EOF' >&2
-gpgsec: illegal name
+gpgsec: invalid <name>
 EOF
     exit 1
   ;;
@@ -49,7 +51,7 @@ readonly file
 
 case $# in
   1)
-    gpg2 -d <"$file"
+    gpg2 -q -d <"$file"
     exit $?
   ;;
 esac
@@ -64,21 +66,22 @@ case $value in
   ;;
 esac
 
+umask 077 || exit $?
+
 if test -f "$file"; then
   :
 else
-  umask 077 || exit $?
   mkdir -p "$file" || exit $?
   rmdir "$file" || exit $?
 fi
 
 case $value in
   -)
-    gpg2 -e --default-recipient-self -s -a >"$file"
+    gpg2 -q -a --default-recipient-self -e -s >"$file"
     exit $?
   ;;
   *)
-    gpg2 -e --default-recipient-self -s -a >"$file" <<EOF
+    gpg2 -q -a --default-recipient-self -e -s >"$file" <<EOF
 $value
 EOF
     exit $?
