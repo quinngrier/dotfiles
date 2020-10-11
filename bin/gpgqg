@@ -95,6 +95,10 @@ esac
 eval "$gpg2"' --armor --export-secret-keys' >"$file" || exit $?
 eval "$gpg2"' --armor --export' >"$file.pub" || exit $?
 
+if command -v shred >/dev/null; then
+  shred "$homedir"/*
+fi
+
 exit 0
 
 #
