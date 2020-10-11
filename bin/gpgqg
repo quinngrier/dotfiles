@@ -43,11 +43,14 @@ gpg2=$gpg2' --quiet'
 readonly gpg2
 
 eval "$gpg2"' \
-  --passphrase "$passphrase" \
+  --passphrase-fd 0 \
   --quick-generate-key \
   "$name" \
   "$algo" \
-;' || exit $?
+  <<EOF
+$passphrase
+EOF
+' || exit $?
 
 eval "$gpg2"' \
   --armor \
