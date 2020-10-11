@@ -4,7 +4,7 @@ export LC_ALL=C
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: git ub <branch> [<remote=upstream> [<start=master>]]
 
 Switches to branch <start>, then fetches and merges it from <remote>,

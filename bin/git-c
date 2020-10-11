@@ -4,7 +4,7 @@ export LC_ALL=C
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: git c <message> [<argument>...]
 
 Makes a commit with the given <message>, failing if the subject line is

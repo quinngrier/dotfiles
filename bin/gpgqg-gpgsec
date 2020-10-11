@@ -2,7 +2,7 @@
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: gpgqg-gpgsec <name> <user_id> [<arg>...]
 
 Generate a GPG keypair with the gpgqg utility and store it with the

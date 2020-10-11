@@ -2,7 +2,7 @@
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: sshqg <file> <comment> [<passphrase> [<algo=rsa4096>]]
 
 Generate an SSH keypair <file> and <file>.pub with comment <comment>.

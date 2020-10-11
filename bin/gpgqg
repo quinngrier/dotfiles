@@ -2,7 +2,7 @@
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: gpgqg <file> <user_id> [<passphrase> [<algo=rsa4096>
                                 [<usage=sign> [<expire=never>]]]]
 

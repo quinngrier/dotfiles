@@ -2,7 +2,7 @@
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: sshqg-gpgsec <name> <comment> [<arg>...]
 
 Generate an SSH keypair with the sshqg utility and store it with the

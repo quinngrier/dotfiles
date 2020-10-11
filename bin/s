@@ -33,7 +33,7 @@ readonly git
 
 case $#,$1 in
   1,--help)
-    cat <<'EOF'
+    cat <<'EOF' || exit $?
 Usage: s
 
 Show status.
