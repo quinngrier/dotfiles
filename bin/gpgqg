@@ -3,16 +3,18 @@
 case $#,$1 in
   1,--help)
     cat <<'EOF'
-Usage: gpgqg <file> <name> [<passphrase> [<algo=rsa4096>]]
+Usage: gpgqg <file> <name> [<passphrase> [<algo=rsa4096>
+                             [<usage=sign> [<expire=never>]]]]
 
 Generate a GPG keypair <file> and <file>.pub with <name> as the user ID.
 Omitting <passphrase> or setting it to the empty string will generate a
 key with no passphrase. Setting <passphrase> to "-" will cause it to be
-read from standard input.
+read from standard input. <algo>, <usage>, and <expire> have the same
+meaning as for the --quick-add-key command of the gpg2 utility.
 EOF
     exit 0
   ;;
-  2,* | 3,* | 4,*)
+  [2-6],*)
     :
   ;;
   *)
@@ -35,6 +37,12 @@ readonly passphrase
 
 algo=${4-rsa4096}
 readonly algo
+
+usage=${5-sign}
+readonly usage
+
+expire=${5-never}
+readonly expire
 
 homedir=`mktemp -d` || exit $?
 case $homedir in /*) : ;; *) homedir=./$homedir ;; esac
@@ -72,12 +80,12 @@ fi
 
 case $passphrase in
   -)
-    eval "$gpg2"' --passphrase-fd 0 \
-                  --quick-generate-key "$name" "$algo"' || exit $?
+    eval "$gpg2"' --passphrase-fd 0 --quick-generate-key \
+                  "$name" "$algo" "$usage" "$expire"' || exit $?
   ;;
   *)
-    eval "$gpg2"' --passphrase-fd 0 \
-                  --quick-generate-key "$name" "$algo" <<EOF
+    eval "$gpg2"' --passphrase-fd 0 --quick-generate-key \
+                  "$name" "$algo" "$usage" "$expire" <<EOF
 $passphrase
 EOF
 ' || exit $?
