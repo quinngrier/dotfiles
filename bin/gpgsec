@@ -15,10 +15,9 @@ written to standard output. Otherwise, if <value> is the empty string,
 the ~/.gpgsec/<name>.gpg file is deleted. Otherwise, <value> is
 encrypted and stored to the ~/.gpgsec/<name>.gpg file.
 
-GnuPG 2 must already be installed and a default-key must already be set
-up in ~/.gnupg/gpg.conf. The --default-recipient-self option is used to
-perform the encryption. The fgpg2 script must also already be installed
-(see <https://gitlab.com/quinngrier/dotfiles/-/blob/master/bin/fgpg2>).
+gpg2 must already be installed and a default-key must already be set up
+in ~/.gnupg/gpg.conf. The --default-recipient-self option will be used
+to perform the encryption.
 EOF
     exit 0
   ;;
@@ -50,7 +49,7 @@ readonly file
 
 case $# in
   1)
-    fgpg2 -d <"$file"
+    gpg2 -d <"$file"
     exit $?
   ;;
 esac
@@ -75,11 +74,11 @@ fi
 
 case $value in
   -)
-    fgpg2 -e --default-recipient-self -s -a >"$file"
+    gpg2 -e --default-recipient-self -s -a >"$file"
     exit $?
   ;;
   *)
-    fgpg2 -e --default-recipient-self -s -a >"$file" <<EOF
+    gpg2 -e --default-recipient-self -s -a >"$file" <<EOF
 $value
 EOF
     exit $?
