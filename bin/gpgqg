@@ -41,7 +41,7 @@ readonly algo
 usage=${5-sign}
 readonly usage
 
-expire=${5-never}
+expire=${6-never}
 readonly expire
 
 homedir=`mktemp -d` || exit $?
