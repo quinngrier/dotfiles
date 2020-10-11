@@ -39,7 +39,7 @@ gpgsec "$name" - <"$tmpdir"/x || exit $?
 gpgsec "$name".pub - <"$tmpdir"/x.pub || exit $?
 
 if command -v shred >/dev/null; then
-  shred "$tmpdir"/*
+  find "$tmpdir" -type f -exec shred '{}' ';'
 fi
 
 exit 0
