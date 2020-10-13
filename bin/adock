@@ -48,7 +48,7 @@ readonly docker
 image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
 readonly image
 
-[ -t 1 ] && t=-t || t=
+[ -t 0 ] && t=-t || t=
 u=`id -u` || exit $?
 g=`id -g` || exit $?
 pwd=`pwd` || exit $?
