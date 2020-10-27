@@ -32,7 +32,6 @@ comment=$2
 readonly comment
 
 passphrase=$3
-readonly passphrase
 
 algo=${4-rsa4096}
 readonly algo
@@ -69,20 +68,25 @@ EOF
   exit 1
 fi
 
+case $passphrase in
+  -)
+    passphrase=`cat` || exit $?
+  ;;
+esac
+readonly passphrase
+
 # Prevent ssh-keygen from asking the user to overwrite.
 rm -f "$file" || exit $?
 
-case $passphrase in
-  -)
-    x=`cat` || exit $?
-    ssh-keygen $algo_flags -C "$comment" \
-               -q -f "$file" -N "$x" || exit $?
-  ;;
-  *)
-    ssh-keygen $algo_flags -C "$comment" \
-               -q -f "$file" -N "$passphrase" || exit $?
-  ;;
-esac
+# Use -m PEM for maximum compatibility.
+ssh-keygen \
+  $algo_flags \
+  -C "$comment" \
+  -N "$passphrase" \
+  -f "$file" \
+  -m PEM \
+  -q \
+|| exit $?
 
 exit 0
 
