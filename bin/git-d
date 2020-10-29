@@ -34,7 +34,7 @@ branches=`eval " $git"' \
   for-each-ref \
   --format="%(refname)" \
   --merged="$commit" \
-  "refs/heads/*" \
+  refs/heads \
 ;'` || exit $?
 readonly branches
 
