@@ -27,17 +27,17 @@
 #
 # This way, ~/.bash_profile is run for login sessions and ~/.bashrc is
 # run for interactive sessions. When both are run, i.e., if the session
-# is both login and interactive, ~/.bash_profile is run "first" (quotes
-# because ~/.bash_profile is what runs ~/.bashrc in this case).
+# is both login and interactive, ~/.bash_profile is what runs ~/.bashrc
+# as its last step, so ~/.bash_profile is run "first".
 #
 # One way to think about it is that ~/.bash_profile contains the code
 # that should only be run for the root node of a tree of sessions, and
 # ~/.bashrc contains the code that should be run for every node of the
 # tree. For example, appending or prepending to PATH should be done in
-# ~/.bash_profile, and setting PS1 should be done in ~/.bashrc.
+# ~/.bash_profile, while setting PS1 should be done in ~/.bashrc.
 #
-# If a default ~/.bash_profile file exists, the master copy can
-# sometimes be found at one of the following locations:
+# If the system provides a default ~/.bash_profile file, the master copy
+# can sometimes be found at one of the following locations:
 #
 #       /etc/defaults/etc/skel/.bash_profile
 #       /etc/skel/.bash_profile
