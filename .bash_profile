@@ -1,4 +1,41 @@
 #
+# This file (~/.bash_profile) holds the code that should be run at the
+# start of every login session.
+#
+# By default, ~/.bash_profile is run for login sessions and ~/.bashrc is
+# run for interactive non-login sessions:
+#
+#                      Default behavior
+#
+#       Interactive  Login  ~/.bash_profile  ~/.bashrc
+#           No        No          No            No
+#           No        Yes         Yes           No
+#           Yes       No          No            Yes
+#           Yes       Yes         Yes           No
+#
+# It's not very useful for interactive login sessions to skip ~/.bashrc,
+# so we make ~/.bash_profile run it as the last step if the session is
+# interactive:
+#
+#                      Modified behavior
+#
+#       Interactive  Login  ~/.bash_profile  ~/.bashrc
+#           No        No          No            No
+#           No        Yes         Yes           No
+#           Yes       No          No            Yes
+#           Yes       Yes         Yes           Yes
+#
+# This way, ~/.bash_profile is run for login sessions and ~/.bashrc is
+# run for interactive sessions. When both are run, i.e., if the session
+# is both login and interactive, ~/.bash_profile is run "first" (quotes
+# because ~/.bash_profile is what runs ~/.bashrc in this case).
+#
+# One way to think about it is that ~/.bash_profile contains the code
+# that should only be run for the root node of a tree of sessions, and
+# ~/.bashrc contains the code that should be run for every node of the
+# tree. For example, appending or prepending to PATH should be done in
+# ~/.bash_profile, and setting PS1 should be done in ~/.bashrc.
+#
 # If a default ~/.bash_profile file exists, the master copy can
 # sometimes be found at one of the following locations:
 #
@@ -8,6 +45,12 @@
 
 PATH=$HOME/bin:$PATH
 export PATH
+
+#
+# Run ~/.bashrc for interactive sessions. It's important that this is
+# the very last thing that ~/.bash_profile does. For more information,
+# see the discussion at the top of this file.
+#
 
 if [[ "$-" == *i* && -f "$HOME/.bashrc" ]]; then
   . "$HOME/.bashrc"
