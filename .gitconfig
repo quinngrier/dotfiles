@@ -1,4 +1,4 @@
-[alias]
+[advice]
 	detachedHead = false
 
 [include]
