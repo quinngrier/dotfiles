@@ -1,6 +1,9 @@
 [advice]
 	detachedHead = false
 
+[alias]
+	ladgo = log --all --decorate --graph --oneline
+
 [include]
 	path = .gitconfig-private
 
