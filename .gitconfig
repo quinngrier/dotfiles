@@ -3,6 +3,7 @@
 
 [alias]
 	ladgo = log --all --decorate --graph --oneline
+	ldgo = log --decorate --graph --oneline
 
 [include]
 	path = .gitconfig-private
