@@ -27,6 +27,18 @@ esac
 name=$1
 readonly name
 
+name_pub=$name.pub
+case $name_pub in
+  *.gpg.pub)
+    script='$s/\.gpg\.pub$/.pub/'
+    name_pub=`sed "$script" <<EOF
+$name_pub
+EOF
+    ` || exit $?
+  ;;
+esac
+readonly name_pub
+
 shift
 
 tmpdir=`mktemp -d` || exit $?
@@ -36,7 +48,7 @@ trap 'rm -f -r "$tmpdir"' 0
 
 gpgqg "$tmpdir"/x "$@" || exit $?
 gpgsec "$name" - <"$tmpdir"/x || exit $?
-gpgsec "$name".pub - <"$tmpdir"/x.pub || exit $?
+gpgsec "$name_pub" - <"$tmpdir"/x.pub || exit $?
 
 if command -v shred >/dev/null; then
   find "$tmpdir" -type f -exec shred '{}' ';'
