@@ -9,18 +9,20 @@ Usage: gpgsec <name> [<value>]
 
 Manages GPG-encrypted secrets in the ~/.gpgsec directory.
 
-If <value> is omitted, the ~/.gpgsec/<name>.gpg file will be decrypted
-and written to standard output. Otherwise, if <value> is empty, the file
-will be deleted. Otherwise, <value> will be encrypted and stored to the
-file. If <value> is "-", it will be read from standard input.
+If <value> is nonempty, it will be encrypted and written to the
+~/.gpgsec/<name>.gpg file. Otherwise, if <value> is empty, the file will
+be deleted. Otherwise, if <value> is omitted, the file will be decrypted
+and written to standard output.
+
+gpg2 must already be installed and a default-key must already be set up
+in the ~/.gnupg/gpg.conf file. The --default-recipient-self option will
+be used when performing encryption.
 
 <name> may freely contain directory components, allowing secrets to be
 organized into directories. For tab completion convenience, <name> may
 optionally be prefixed with "~/.gpgsec/" and suffixed with ".gpg".
 
-gpg2 must already be installed and a default-key must already be set up
-in ~/.gnupg/gpg.conf. The --default-recipient-self option will be used
-to perform the encryption.
+If <value> is "-", it will be read from standard input.
 EOF
     exit 0
   ;;
