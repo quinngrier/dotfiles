@@ -15,7 +15,8 @@ will be deleted. Otherwise, <value> will be encrypted and stored to the
 file. If <value> is "-", it will be read from standard input.
 
 <name> may freely contain directory components, allowing secrets to be
-organized into directories.
+organized into directories. For tab completion convenience, <name> may
+optionally be prefixed with "~/.gpgsec/" and suffixed with ".gpg".
 
 gpg2 must already be installed and a default-key must already be set up
 in ~/.gnupg/gpg.conf. The --default-recipient-self option will be used
@@ -46,7 +47,23 @@ EOF
   ;;
 esac
 
-file=$HOME/.gpgsec/$name.gpg
+file=$name
+case $file in
+  "$HOME"/.gpgsec/*)
+    :
+  ;;
+  *)
+    file=$HOME/.gpgsec/$file
+  ;;
+esac
+case $file in
+  *.gpg)
+    :
+  ;;
+  *)
+    file=$file.gpg
+  ;;
+esac
 readonly file
 
 case $# in
