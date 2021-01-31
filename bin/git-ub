@@ -5,7 +5,7 @@ export LC_ALL=C
 case $#,$1 in
   1,--help)
     cat <<'EOF' || exit $?
-Usage: git ub <branch> [<remote=upstream> [<start=master>]]
+Usage: git ub [<branch=work> [<remote=upstream> [<start=master>]]]
 
 Switches to branch <start>, then fetches and merges it from <remote>,
 then starts <branch> from it. <branch> will be recreated if it already
@@ -13,7 +13,7 @@ exists as an ancestor of <start>.
 EOF
     exit 0
   ;;
-  1,* | 2,* | 3,*)
+  0,* | 1,* | 2,* | 3,*)
     :
   ;;
   *)
@@ -26,7 +26,7 @@ esac
 
 readonly git="${GIT:-git}"
 
-readonly branch="$1"
+readonly branch="${1-work}"
 readonly remote="${2-upstream}"
 readonly start="${3-master}"
 
