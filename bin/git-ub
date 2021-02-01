@@ -30,7 +30,7 @@ readonly branch="${1-work}"
 readonly remote="${2-upstream}"
 readonly start="${3-master}"
 
-eval " $git"' u "$remote" "$start"' || exit $?
+eval " $git"' u -- "$remote" "$start"' || exit $?
 
 eval " $git"' show-ref --verify -q "refs/heads/$branch"'
 s=$?

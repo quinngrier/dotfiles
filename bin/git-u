@@ -2,30 +2,141 @@
 
 export LC_ALL=C
 
-case $#,$1 in
-  1,--help)
-    cat <<'EOF' || exit $?
+readonly git="${GIT:-git}"
+readonly sed="${SED:-sed}"
+
+readonly help='run "git-u --help" for help'
+
+remote=upstream
+branch=master
+
+parse_options=:
+operand_var=
+
+until (exit ${1+1}0); do
+
+  if $parse_options; then
+    case $1 in
+
+      --)
+        parse_options=false
+        shift
+        continue
+      ;;
+
+      --=*)
+        cat <<EOF >&2
+$0: the -- option forbids an argument: $1
+$0: $help
+EOF
+        exit 1
+      ;;
+
+      -h* | --help)
+        cat <<'EOF' || exit $?
 Usage: git u [<remote=upstream> [<branch=master>]]
 
 Switches to <branch>, then fetches and merges it from <remote>.
 EOF
-    exit 0
-  ;;
-  0, | 1,* | 2,*)
-    :
-  ;;
-  *)
-    cat <<'EOF' >&2
-Bad usage. Try "git-u --help" (not "git u --help").
+        exit 0
+      ;;
+
+      --help=*)
+        cat <<EOF >&2
+$0: the --help option forbids an argument: $1
+$0: $help
+EOF
+        exit 1
+      ;;
+
+      --*)
+        script='
+          s/'\''/'\''\\'\'''\''/g
+          1 s/^/'\''/
+          /=/ {
+            s/=.*/'\''/
+            q
+          }
+          $ s/$/'\''/
+        '
+        option=`
+          sed "$script" <<EOF
+$1
+EOF
+        ` || exit $?
+        eval option="$option"
+        cat <<EOF >&2
+$0: unknown option: $option
+$0: $help
+EOF
+        exit 1
+      ;;
+
+      -'
+'*)
+        cat <<EOF >&2
+$0: unknown option: -
+
+$0: $help
+EOF
+        exit 1
+      ;;
+
+      -?*)
+        option=`
+          head -c 2 <<EOF
+$1
+EOF
+        ` || exit $?
+        cat <<EOF >&2
+$0: unknown option: $option
+$0: $help
+EOF
+        exit 1
+      ;;
+
+    esac
+  fi
+
+  case $operand_var in
+    '')     operand_var=remote ;;
+    remote) operand_var=branch ;;
+    branch)
+      cat <<EOF >&2
+$0: too many operands: $1
+$0: $help
+EOF
+      exit 1
+    ;;
+  esac
+
+  eval $operand_var='$1'
+  shift
+
+done
+
+readonly remote
+readonly branch
+
+case $remote in
+  -*)
+    cat <<EOF >&2
+$0: <remote> must not begin with a - character: $remote
+$0: $help
 EOF
     exit 1
   ;;
 esac
 
-readonly git="${GIT:-git}"
-
-readonly remote="${1-upstream}"
-readonly branch="${2-master}"
+case $branch in
+  -*)
+    cat <<EOF >&2
+$0: <branch> must not begin with a - character: $branch
+$0: $help
+EOF
+    exit 1
+  ;;
+esac
 
 readonly message="Merge $remote/$branch into $branch"
 
