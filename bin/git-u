@@ -60,7 +60,7 @@ EOF
           $ s/$/'\''/
         '
         option=`
-          sed "$script" <<EOF
+          eval " $sed"' "$script"' <<EOF
 $1
 EOF
         ` || exit $?
