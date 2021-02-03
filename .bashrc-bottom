@@ -51,8 +51,9 @@ HISTFILESIZE=100000
 HISTSIZE=$HISTFILESIZE
 shopt -s cmdhist histappend lithist
 
-#
-# Set the prompt string and window title.
+#-----------------------------------------------------------------------
+# Prompt string and window title
+#-----------------------------------------------------------------------
 #
 # The prompt string looks like this:
 #
@@ -76,7 +77,7 @@ shopt -s cmdhist histappend lithist
 #
 
 PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
-PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
+PS1+='[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
 #-----------------------------------------------------------------------
 # gpg-agent and ssh-agent
