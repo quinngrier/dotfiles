@@ -5,25 +5,25 @@
 # By default, ~/.bash_profile is run for login sessions and ~/.bashrc is
 # run for interactive non-login sessions:
 #
-#                      Default behavior
+#                           Default behavior
 #
-#       Interactive  Login  ~/.bash_profile  ~/.bashrc
-#           No        No          No            No
-#           No        Yes         Yes           No
-#           Yes       No          No            Yes
-#           Yes       Yes         Yes           No
+#            Interactive  Login  ~/.bash_profile  ~/.bashrc
+#                No        No          No            No
+#                No        Yes         Yes           No
+#                Yes       No          No            Yes
+#                Yes       Yes         Yes           No
 #
 # It's not very useful for interactive login sessions to skip ~/.bashrc,
 # so we make ~/.bash_profile run it as the last step if the session is
 # interactive:
 #
-#                      Modified behavior
+#                           Modified behavior
 #
-#       Interactive  Login  ~/.bash_profile  ~/.bashrc
-#           No        No          No            No
-#           No        Yes         Yes           No
-#           Yes       No          No            Yes
-#           Yes       Yes         Yes           Yes
+#            Interactive  Login  ~/.bash_profile  ~/.bashrc
+#                No        No          No            No
+#                No        Yes         Yes           No
+#                Yes       No          No            Yes
+#                Yes       Yes         Yes           Yes
 #
 # This way, ~/.bash_profile is run for login sessions and ~/.bashrc is
 # run for interactive sessions. When both are run, i.e., if the session
