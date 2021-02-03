@@ -78,8 +78,9 @@ shopt -s cmdhist histappend lithist
 PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
 PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
-#
-# Set up gpg-agent and ssh-agent.
+#-----------------------------------------------------------------------
+# gpg-agent and ssh-agent
+#-----------------------------------------------------------------------
 #
 # The idea here is to create a string $boot that represents the system
 # boot time and store the agent hookup commands in some files in $HOME
@@ -90,29 +91,35 @@ PS1=$PS1'[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 #
 
 eval " $(
-  case $(uname) in
+  x=$(uname) || exit
+  case $x in
     (*CYGWIN*)
-      boot=$(WMIC OS GET LastBootUpTime | tr -d '\r ' | sed -n 2p)
+      x='WMIC OS GET LastBootUpTime'
+      boot=$($x | tr -d '\t\r ' | sed -n 2p) || exit
     ;;
     (*)
-      boot=$(who -b | sed 's/.*boot//')
-      boot=$(date -d "$boot" +%s)
+      boot=$(who -b | sed 's/.*boot//') || exit
+      boot=$(date -d "$boot" '+%s') || exit
     ;;
   esac
   start_or_inherit() {
     local x="$HOME/.bashrc-$1"
     if [[ ! -f "$x-$boot" ]]; then
-      rm -f "$x-"*
-      eval "$@" >"$x-$boot.$$" && mv "$x-$boot.$$" "$x-$boot"
+      rm -f "$x-"* || :
+      eval "$@" >"$x-$boot.$$" || return
+      mv -f "$x-$boot.$$" "$x-$boot" || return
     fi
-    x=$(cat "$x-$boot") && printf '%s\n' "$x"
+    x=$(cat "$x-$boot") || return
+    printf '%s\n' "$x" || return
   }
-  start_or_inherit gpg-agent --daemon
-  start_or_inherit ssh-agent
-)"
+  start_or_inherit gpg-agent --daemon || :
+  start_or_inherit ssh-agent || :
+)" || :
 
-GPG_TTY=$(tty)
-export GPG_TTY
+bashrc_x=$(tty) && export GPG_TTY="$bashrc_x"
+unset bashrc_x
+
+#-----------------------------------------------------------------------
 
 #
 # Free up Ctrl-s and Ctrl-q by disabling XON/XOFF flow control.
