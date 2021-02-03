@@ -52,10 +52,10 @@ HISTSIZE=$HISTFILESIZE
 shopt -s cmdhist histappend lithist
 
 #-----------------------------------------------------------------------
-# Prompt string and window title
+# Primary prompt string and window title
 #-----------------------------------------------------------------------
 #
-# The prompt string looks like this:
+# The primary prompt string looks like this:
 #
 #       [0][user@host:/current/working/directory]
 #       $
