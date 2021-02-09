@@ -2,30 +2,115 @@
 
 export LC_ALL=C
 
-case $#,$1 in
-  1,--help)
-    cat <<'EOF' || exit $?
+readonly git="${GIT:-git}"
+readonly sed="${SED:-sed}"
+
+commit=master
+
+parse_options=:
+operand_var=
+
+until (exit ${1+1}0); do
+
+  if $parse_options; then
+    case $1 in
+
+      --)
+        parse_options=false
+        shift
+        continue
+      ;;
+
+      --=*)
+        cat <<EOF >&2
+$0: the -- option forbids an argument: $1
+$0: run "git-d --help" for help
+EOF
+        exit 1
+      ;;
+
+      -h* | --help)
+        cat <<'EOF' || exit $?
 Usage: git d [<commit=master>]
 
-Deletes all branches that are reachable from <commit> except for the
-current branch.
+Deletes all branches that are reachable from <commit> except for branch
+master, branch main, and the current branch.
 EOF
-    exit 0
-  ;;
-  0, | 1,*)
-    :
-  ;;
-  *)
-    cat <<'EOF' >&2
-Bad usage. Try "git-d --help" (not "git d --help").
+        exit 0
+      ;;
+
+      --help=*)
+        cat <<EOF >&2
+$0: the --help option forbids an argument: $1
+$0: run "git-d --help" for help
 EOF
-    exit 1
-  ;;
-esac
+        exit 1
+      ;;
 
-readonly git="${GIT:-git}"
+      --*)
+        script='
+          s/'\''/'\''\\'\'''\''/g
+          1 s/^/'\''/
+          /=/ {
+            s/=.*/'\''/
+            q
+          }
+          $ s/$/'\''/
+        '
+        option=`eval " $sed"' "$script"' <<EOF
+$1
+EOF
+        ` || exit $?
+        eval option="$option"
+        cat <<EOF >&2
+$0: unknown option: $option
+$0: run "git-d --help" for help
+EOF
+        exit 1
+      ;;
 
-readonly commit="${1-master}"
+      -'
+'*)
+        cat <<EOF >&2
+$0: unknown option: -
+
+$0: run "git-d --help" for help
+EOF
+        exit 1
+      ;;
+
+      -?*)
+        option=`head -c 2 <<EOF
+$1
+EOF
+        ` || exit $?
+        cat <<EOF >&2
+$0: unknown option: $option
+$0: run "git-d --help" for help
+EOF
+        exit 1
+      ;;
+
+    esac
+  fi
+
+  case $operand_var in
+    '') operand_var=commit ;;
+    commit)
+      cat <<EOF >&2
+$0: too many operands: $1
+$0: run "git-d --help" for help
+EOF
+      exit 1
+    ;;
+  esac
+
+  eval $operand_var='$1'
+  shift
+
+done
+
+readonly commit
 
 head=`eval " $git"' rev-parse --symbolic-full-name HEAD'` || exit $?
 readonly head
@@ -38,11 +123,9 @@ branches=`eval " $git"' \
 ;'` || exit $?
 readonly branches
 
-set x $branches
-shift
-for branch; do
+for branch in $branches; do
   case $branch in
-    "$head")
+    refs/heads/master | refs/heads/main | "$head")
       continue
     ;;
   esac
