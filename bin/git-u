@@ -59,8 +59,7 @@ EOF
           }
           $ s/$/'\''/
         '
-        option=`
-          eval " $sed"' "$script"' <<EOF
+        option=`eval " $sed"' "$script"' <<EOF
 $1
 EOF
         ` || exit $?
@@ -83,8 +82,7 @@ EOF
       ;;
 
       -?*)
-        option=`
-          head -c 2 <<EOF
+        option=`head -c 2 <<EOF
 $1
 EOF
         ` || exit $?
@@ -99,7 +97,7 @@ EOF
   fi
 
   case $operand_var in
-    '')     operand_var=remote ;;
+    '') operand_var=remote ;;
     remote) operand_var=branch ;;
     branch)
       cat <<EOF >&2
