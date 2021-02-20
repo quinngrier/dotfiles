@@ -31,6 +31,22 @@
 #
 
 #-----------------------------------------------------------------------
+# The e alias
+#-----------------------------------------------------------------------
+#
+# The e alias can be used to enable error handling when writing ad-hoc
+# subshell scripts. For example:
+#
+#       (e; xs=$(git grep -l foo); sed -i 's/foo/bar/g' $xs)
+#
+# Do not use the e alias outside of a subshell! Doing so will enable
+# error handling for all commands you type, which is probably not what
+# you want, as this will make your shell exit upon any command failing.
+# If you do it by accident, you can use the ee alias to undo it.
+#
+
+alias e='{ set -Eeuo pipefail || exit; trap exit ERR; }'
+alias ee='{ set +Eeuo pipefail; trap - ERR; }'
 
 #
 # This alias goes along with the ~/bin/s script. The problem is that we
