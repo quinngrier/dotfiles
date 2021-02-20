@@ -31,6 +31,23 @@
 #
 
 #-----------------------------------------------------------------------
+# Shell options
+#-----------------------------------------------------------------------
+
+shopt -s \
+  checkjobs \
+  cmdhist \
+  dotglob \
+  globasciiranges \
+  globstar \
+  histappend \
+  interactive_comments \
+  lithist \
+  nullglob \
+  shift_verbose \
+;
+
+#-----------------------------------------------------------------------
 # The e alias
 #-----------------------------------------------------------------------
 #
@@ -65,7 +82,6 @@ alias s='s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs"'
 
 HISTFILESIZE=100000
 HISTSIZE=$HISTFILESIZE
-shopt -s cmdhist histappend lithist
 
 #-----------------------------------------------------------------------
 # Primary prompt string and window title
