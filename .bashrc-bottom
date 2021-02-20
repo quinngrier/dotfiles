@@ -65,18 +65,20 @@ shopt -s \
 alias e='{ set -Eeuo pipefail || exit; trap exit ERR; }'
 alias ee='{ set +Eeuo pipefail; trap - ERR; }'
 
+#-----------------------------------------------------------------------
+# The s alias
+#-----------------------------------------------------------------------
 #
-# This alias goes along with the ~/bin/s script. The problem is that we
+# The s alias goes along with the ~/bin/s script. The problem is that we
 # want the script to show the output of the jobs command, but if we run
 # the jobs command in the script, it will show the jobs of the script's
 # shell instance, not the jobs of our interactive shell instance. The
-# solution is to use this alias to run the jobs command and pass the
-# output to the script as an argument. We also pass an extra "token"
-# argument so that the script can detect if it was accidentally run
-# without the alias.
+# solution is to use the s alias to run the jobs command and pass the
+# output to the script. We also pass an extra "token" argument so the
+# script can detect if it was accidentally run without the alias.
 #
 
-alias s='s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs"'
+alias s='(s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs")'
 
 #-----------------------------------------------------------------------
 
