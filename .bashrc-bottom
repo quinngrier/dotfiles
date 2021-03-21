@@ -68,8 +68,8 @@ alias dr='docker run --rm -i -t'
 # If you do it by accident, you can use the ee alias to undo it.
 #
 
-alias e='{ set -Eeuo pipefail || exit; trap exit ERR; }'
-alias ee='{ set +Eeuo pipefail; trap - ERR; }'
+alias e='{ set -E -e -u -o pipefail || exit; trap exit ERR; }'
+alias ee='{ set +E +e +u +o pipefail; trap - ERR; }'
 
 #-----------------------------------------------------------------------
 # The s alias
