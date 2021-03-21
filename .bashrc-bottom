@@ -156,8 +156,11 @@ eval " $(
   start_or_inherit ssh-agent
 )"
 
-bashrc_x=$(tty) && export GPG_TTY="$bashrc_x"
-unset bashrc_x
+if GPG_TTY=$(tty); then
+  export GPG_TTY
+else
+  unset GPG_TTY
+fi
 
 #-----------------------------------------------------------------------
 
