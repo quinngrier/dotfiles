@@ -145,16 +145,16 @@ eval " $(
   start_or_inherit() {
     local x="$HOME/.bashrc-$1"
     if [[ ! -f "$x-$boot" ]]; then
-      rm -f "$x-"* || :
+      rm -f "$x-"*
       eval "$@" >"$x-$boot.$$" || return
       mv -f "$x-$boot.$$" "$x-$boot" || return
     fi
     x=$(cat "$x-$boot") || return
     printf '%s\n' "$x" || return
   }
-  start_or_inherit gpg-agent --daemon || :
-  start_or_inherit ssh-agent || :
-)" || :
+  start_or_inherit gpg-agent --daemon
+  start_or_inherit ssh-agent
+)"
 
 bashrc_x=$(tty) && export GPG_TTY="$bashrc_x"
 unset bashrc_x
