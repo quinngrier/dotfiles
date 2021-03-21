@@ -132,8 +132,7 @@ PS1+='[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 #
 
 eval " $(
-  x=$(uname) || exit
-  case $x in
+  case $(uname) in
     (*CYGWIN*)
       x='WMIC OS GET LastBootUpTime'
       boot=$($x | tr -d '\t\r ' | sed -n 2p) || exit
