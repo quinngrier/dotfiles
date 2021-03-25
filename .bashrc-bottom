@@ -45,6 +45,8 @@ shopt -s \
   globasciiranges \
   globstar \
   histappend \
+  histreedit \
+  histverify \
   interactive_comments \
   lithist \
   nullglob \
