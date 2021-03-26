@@ -70,10 +70,12 @@ else
   unset VISUAL
 fi
 
+#-----------------------------------------------------------------------
+# Run ~/.bashrc for interactive sessions
+#-----------------------------------------------------------------------
 #
-# Run ~/.bashrc for interactive sessions. It's important that this is
-# the very last thing that ~/.bash_profile does. For more information,
-# see the discussion at the top of this file.
+# It's important that this is the last thing that ~/.bash_profile does.
+# For more information, see the discussion at the top of this file.
 #
 
 if [[ "$-" == *i* && -f "$HOME/.bashrc" ]]; then
