@@ -53,8 +53,22 @@
 #       /etc/skel/.bash_profile
 #
 
+#-----------------------------------------------------------------------
+
 PATH=$HOME/bin:$PATH
 export PATH
+
+#-----------------------------------------------------------------------
+
+if VISUAL=$(command -v vim); then
+  export VISUAL
+elif VISUAL=$(command -v vi); then
+  export VISUAL
+elif VISUAL=$(command -v nano); then
+  export VISUAL
+else
+  unset VISUAL
+fi
 
 #
 # Run ~/.bashrc for interactive sessions. It's important that this is
