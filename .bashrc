@@ -1,15 +1,6 @@
 #
-# This file (~/.bashrc-bottom) holds the code that should be run at the
-# start of every interactive session. The following command should be
-# put at the bottom of ~/.bashrc to run this file:
-#
-#       . ~/.bashrc-bottom
-#
-# The reason for not putting the code directly into the ~/.bashrc file
-# is to make it easier to work with default ~/.bashrc files on systems
-# that provide them. It is easier to make this file portable and make
-# the above small change on each system than it is to make a portable
-# ~/.bashrc file that reasonably subsumes all default ~/.bashrc files.
+# This file (~/.bashrc) holds the code that should be run at the start
+# of every interactive session.
 #
 # ~/.bash_profile is run for login sessions and ~/.bashrc is run for
 # interactive sessions. When both are run, i.e., if the session is both
