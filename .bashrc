@@ -41,6 +41,7 @@ shopt -s \
   checkjobs \
   cmdhist \
   dotglob \
+  extglob \
   globasciiranges \
   globstar \
   histappend \
