@@ -39,7 +39,6 @@ set \
 
 shopt -s \
   checkjobs \
-  cmdhist \
   dotglob \
   extglob \
   globasciiranges \
@@ -51,6 +50,10 @@ shopt -s \
   lithist \
   nullglob \
   shift_verbose \
+;
+
+shopt -u \
+  cmdhist \
 ;
 
 #-----------------------------------------------------------------------
