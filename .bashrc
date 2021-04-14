@@ -34,7 +34,6 @@ fi
 #-----------------------------------------------------------------------
 
 set \
-  +o histexpand \
   -o vi \
 ;
 
@@ -52,6 +51,10 @@ shopt -s \
   lithist \
   nullglob \
   shift_verbose \
+;
+
+set \
+  +o histexpand \
 ;
 
 shopt -u \
