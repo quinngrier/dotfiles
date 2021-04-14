@@ -34,11 +34,13 @@ fi
 #-----------------------------------------------------------------------
 
 set \
+  +o histexpand \
   -o vi \
 ;
 
 shopt -s \
   checkjobs \
+  cmdhist \
   dotglob \
   extglob \
   globasciiranges \
@@ -53,7 +55,7 @@ shopt -s \
 ;
 
 shopt -u \
-  cmdhist \
+  compat31 \
 ;
 
 #-----------------------------------------------------------------------
