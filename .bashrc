@@ -12,7 +12,8 @@
 # that should only be run for the root node of a tree of sessions, and
 # ~/.bashrc contains the code that should be run for every node of the
 # tree. For example, appending or prepending to PATH should be done in
-# ~/.bash_profile, while setting PS1 should be done in ~/.bashrc.
+# ~/.bash_profile (because PATH is exported), while setting PS1 should
+# be done in ~/.bashrc (because PS1 is not exported).
 #
 # If the system provides a default ~/.bashrc file, the master copy can
 # sometimes be found at one of the following locations:
