@@ -10,11 +10,11 @@
 #
 # Usage: jqbc [<arg>]...
 #
-# Runs jq with the given arguments, and, for every span of text matching
-# /"bc:[^"]*"/ in the output, adjusts that span by deleting bc: from the
-# beginning and filtering the resulting text (except the quotes) through
-# bc -l. For example, "bc:2^65" would become "36893488147419103232", and
-# "bc:1/3" would become ".33333333333333333333".
+# Runs jq with the given arguments and, for every string that begins
+# with "bc:" in the output, adjusts the string by deleting "bc:" and
+# filtering the remaining text through bc -l. For example, "bc:3^90"
+# becomes "8727963568087712425891397479476727340041449" and "bc:1/3"
+# becomes ".33333333333333333333".
 #
 
 case ${BASH_BOOTSTRAP+x}y$# in
@@ -33,11 +33,17 @@ jq "$@" | gawk '
     bc = "bc -l";
   }
   {
-    n = patsplit($0, x, /"bc:[^"]*"/, y);
+    n = patsplit($0, x, /(^"|[^\\]")bc:[^\\"]*"/, y);
     printf "%s", y[0];
     for (i = 0; i++ != n;) {
-      sub(/"bc:/, "", x[i]);
-      sub(/"/, "", x[i]);
+      if (x[i] ~ /^"bc:/) {
+        w = "";
+        sub(/^"bc:/, "", x[i]);
+      } else {
+        w = substr(x[i], 1, 1);
+        sub(/^."bc:/, "", x[i]);
+      }
+      sub(/"$/, "", x[i]);
       print x[i] |& bc;
       s = bc |& getline x[i];
       if (s <= 0) {
@@ -45,7 +51,7 @@ jq "$@" | gawk '
         exit 1;
       }
       bc_is_running = 1;
-      printf "%s", "\"" x[i] "\"" y[i];
+      printf "%s", w "\"" x[i] "\"" y[i];
     }
     printf "\n";
   }
