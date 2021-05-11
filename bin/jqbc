@@ -23,10 +23,12 @@ case ${BASH_BOOTSTRAP+x}y$# in
 esac
 unset BASH_BOOTSTRAP
 
+declare -r -x LC_ALL=C
+declare -r argv0=jqbc
+declare -r argvS="${argv0//?/ }"
+
 set -E -e -u -o pipefail || exit
 trap exit ERR
-
-declare -r -x LC_ALL=C
 
 jq "$@" | gawk '
   BEGIN {
@@ -47,7 +49,7 @@ jq "$@" | gawk '
       print x[i] |& bc;
       s = bc |& getline x[i];
       if (s <= 0) {
-        print "jqbc: bc |& getline returned " s >"/dev/stderr";
+        print "'$argv0': bc |& getline returned " s >"/dev/stderr";
         exit 1;
       }
       bc_is_running = 1;
@@ -59,7 +61,7 @@ jq "$@" | gawk '
     if (bc_is_running) {
       s = close(bc);
       if (s != 0) {
-        print "jqbc: close(bc) returned " s >"/dev/stderr";
+        print "'$argv0': close(bc) returned " s >"/dev/stderr";
         exit 1;
       }
     }
