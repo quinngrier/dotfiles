@@ -23,10 +23,10 @@ case ${BASH_BOOTSTRAP+x}y$# in
 esac
 unset BASH_BOOTSTRAP
 
-set -Eeuo pipefail || exit
+set -E -e -u -o pipefail || exit
 trap exit ERR
 
-declare -rx LC_ALL=C
+declare -r -x LC_ALL=C
 
 jq "$@" | gawk '
   BEGIN {
