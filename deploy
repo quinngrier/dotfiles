@@ -1,0 +1,156 @@
+#! /bin/sh -
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+files='
+  .bash_profile
+  .bashrc
+  .gitattributes
+  .gitconfig
+  .inputrc
+  .mailmap
+  .screenrc
+  .ssh/config
+  .vimrc
+  CC0-1.0.txt
+  bin/adock
+  bin/git-c
+  bin/git-d
+  bin/git-u
+  bin/git-ub
+  bin/gpgqg
+  bin/gpgqg-gpgsec
+  bin/gpgsec
+  bin/jqbc
+  bin/s
+  bin/sshqg
+  bin/sshqg-gpgsec
+  deploy
+'
+readonly files
+
+LC_ALL=C
+readonly LC_ALL
+export LC_ALL
+
+case $0 in
+  ./deploy)
+    :
+  ;;
+  *)
+    printf '%s\n' "$0: this script must only be run as ./deploy" >&2
+    exit 1
+  ;;
+esac
+
+sed_script_1='
+  s/'\''/&\\&&/g
+  1 s/^/'\''/
+  $ s/$/'\''/
+'
+readonly sed_script_1
+
+sed_script_2='
+  s/'\''/&\\&&/g
+  1 s/^/'\''/
+  $ s/.$/'\''/
+'
+readonly sed_script_2
+
+parse_options=:
+make_tar=:
+
+case $# in
+  0) set x ;;
+  *) set x "$@" ;;
+esac
+until shift && (exit ${1+1}0); do
+
+  if $parse_options; then
+    case $1 in
+
+      --)
+        parse_options=false
+        continue
+      ;;
+
+      --=*)
+        printf '%s\n' "$0: option forbids an argument: --" >&2
+        exit 1
+      ;;
+
+      -?*)
+        printf '%s\n' "$0: unknown option: $1" >&2
+        exit 1
+      ;;
+
+    esac
+  fi
+
+  if $make_tar; then
+    tar czf deploy.tar.gz $files
+    make_tar=false
+  fi
+
+  case $1 in
+    *:*)
+      x='\(.*:\)'
+      x=`expr "$1" : "$x"` || exit $?
+      x=`sed "$sed_script_2" <<EOF || exit $?
+$x
+EOF
+`
+      eval "remote=$x"
+      x='.*:\(.*\)'
+      x=`expr "$1." : "$x"` || exit $?
+      x=`sed "$sed_script_2" <<EOF || exit $?
+$x
+EOF
+`
+      eval "dst=$x"
+      case $dst in
+        '') dst=. ;;
+        [./]*) : ;;
+        *) dst=./$dst ;;
+      esac
+      dst=`sed "$sed_script_1" <<EOF || exit $?
+$dst
+EOF
+`
+      ssh "$remote" "
+        mkdir -p $dst || exit $?
+        cd $dst || exit $?
+        tar xz || exit $?
+        chmod -R go-rwx .ssh || exit $?
+      " <deploy.tar.gz || exit $?
+    ;;
+    *)
+      dst=$1
+      case $dst in
+        '') : ;;
+        [./]*) : ;;
+        *) dst=./$dst ;;
+      esac
+      (
+        mkdir -p "$dst" || exit $?
+        cd "$dst" || exit $?
+        tar xz || exit $?
+        chmod -R go-rwx .ssh || exit $?
+      ) <deploy.tar.gz || exit $?
+    ;;
+  esac
+
+done
+
+if $make_tar; then
+  :
+else
+  rm deploy.tar.gz || exit $?
+fi
