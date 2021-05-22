@@ -50,19 +50,19 @@ case $0 in
   ;;
 esac
 
-sed_script_1='
+sed_quote_1='
   s/'\''/&\\&&/g
   1 s/^/'\''/
   $ s/$/'\''/
 '
-readonly sed_script_1
+readonly sed_quote_1
 
-sed_script_2='
+sed_quote_2='
   s/'\''/&\\&&/g
   1 s/^/'\''/
   $ s/.$/'\''/
 '
-readonly sed_script_2
+readonly sed_quote_2
 
 parse_options=:
 make_tar=:
@@ -103,14 +103,14 @@ until shift && (exit ${1+1}0); do
     *:*)
       x='\(.*:\)'
       x=`expr "$1" : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF || exit $?
+      x=`sed "$sed_quote_2" <<EOF || exit $?
 $x
 EOF
 `
       eval "remote=$x"
       x='.*:\(.*\)'
       x=`expr "$1." : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF || exit $?
+      x=`sed "$sed_quote_2" <<EOF || exit $?
 $x
 EOF
 `
@@ -120,7 +120,7 @@ EOF
         [./]*) : ;;
         *) dst=./$dst ;;
       esac
-      dst=`sed "$sed_script_1" <<EOF || exit $?
+      dst=`sed "$sed_quote_1" <<EOF || exit $?
 $dst
 EOF
 `
