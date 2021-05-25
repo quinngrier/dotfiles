@@ -104,27 +104,27 @@ until shift && (exit ${1+1}0); do
     *:*)
       x='\(.*:\)'
       x=`expr "$1" : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF || exit $?
+      x=`sed "$sed_script_2" <<EOF
 $x
 EOF
-`
+      ` || exit $?
       eval "remote=$x"
       x='.*:\(.*\)'
       x=`expr "$1." : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF || exit $?
+      x=`sed "$sed_script_2" <<EOF
 $x
 EOF
-`
+      ` || exit $?
       eval "dst=$x"
       case $dst in
         '') dst=. ;;
         [./]*) : ;;
         *) dst=./$dst ;;
       esac
-      dst=`sed "$sed_script_1" <<EOF || exit $?
+      dst=`sed "$sed_script_1" <<EOF
 $dst
 EOF
-`
+      ` || exit $?
       ssh "$remote" "
         mkdir -p $dst || exit $?
         cd $dst || exit $?
