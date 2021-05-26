@@ -8,13 +8,51 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
+"-----------------------------------------------------------------------
+" Colors
+"-----------------------------------------------------------------------
+
+syntax off
+
+highlight ColorColumn NONE
+highlight ColorColumn term=reverse ctermbg=DarkBlue
+
+highlight IncSearch NONE
+highlight IncSearch term=reverse ctermfg=Black ctermbg=Yellow
+
+highlight LineNr NONE
+highlight LineNr ctermfg=DarkBlue
+
+highlight MatchParen NONE
+highlight MatchParen term=reverse ctermfg=Black ctermbg=Yellow
+
+highlight NonText NONE
+highlight NonText ctermfg=Brown
+
+highlight Search NONE
+highlight Search term=reverse ctermfg=Black ctermbg=Yellow
+
+highlight SpecialKey NONE
+highlight SpecialKey ctermfg=Brown
+
+highlight Visual NONE
+highlight Visual term=reverse ctermfg=Black ctermbg=DarkGreen
+
+"-----------------------------------------------------------------------
+" Search highlighting
+"-----------------------------------------------------------------------
+
+set hlsearch
+set incsearch
+nnoremap <silent> <C-h> :nohlsearch<CR>
+
+"-----------------------------------------------------------------------
+
 set colorcolumn=73
 
 set encoding=utf-8
 
 set history=10000
-
-set hlsearch
 
 set list
 
@@ -27,16 +65,13 @@ set listchars+=trail:╳
 
 set nojoinspaces
 
+set number
+
 set textwidth=72
 
 set viminfo=
 set viminfo+='1000
 set viminfo+=s1000
-
-highlight ColorColumn ctermbg=DarkBlue
-" Is this necessary: au VimEnter * hi ColorColumn ctermbg=4
-
-nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
 
 "-----------------------------------------------------------------------
 
@@ -89,8 +124,6 @@ aug vimrc
   au!
   au BufNewFile,BufRead,VimEnter * setl fo=q
 aug END
-
-syntax enable
 
 autocmd FileType vim set comments=:\\"
 
