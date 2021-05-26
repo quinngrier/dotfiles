@@ -8,6 +8,8 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
+# This script is written in portable shell.
+#
 
 files='
   .bash_profile
