@@ -77,6 +77,30 @@ until shift && (exit ${1+1}0); do
   if $parse_options; then
     case $1 in
 
+      --help)
+        cat <<'EOF' || exit $?
+Usage: ./deploy [<dir>]...
+
+Deploys the dotfiles to each <dir>. If <dir> contains a colon character,
+it specifies a directory on a remote machine, where the text before the
+last colon character is the ssh address, and the text after the last
+colon character is the directory. If the text after the last colon
+character is empty, it is adjusted to ".".
+
+Examples:
+
+      ./deploy ~   Deploys the dotfiles to your home directory.
+      ./deploy R:  Deploys the dotfiles to your home directory
+                   on the remote machine whose ssh address is R.
+EOF
+        exit 0
+      ;;
+
+      --help=*)
+        printf '%s\n' "$0: option forbids an argument: --help" >&2
+        exit 1
+      ;;
+
       --)
         parse_options=false
         continue
