@@ -47,6 +47,18 @@ set incsearch
 nnoremap <silent> <C-h> :nohlsearch<CR>
 
 "-----------------------------------------------------------------------
+" Parenthesis matching
+"-----------------------------------------------------------------------
+
+set cpoptions+=M
+
+set matchpairs=
+set matchpairs+=(:)
+set matchpairs+=<:>
+set matchpairs+=[:]
+set matchpairs+={:}
+
+"-----------------------------------------------------------------------
 
 set colorcolumn=73
 
