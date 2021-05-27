@@ -30,7 +30,7 @@ highlight NonText NONE
 highlight NonText ctermfg=Brown
 
 highlight Search NONE
-highlight Search term=reverse ctermfg=Black ctermbg=Yellow
+highlight Search term=reverse ctermfg=Black ctermbg=Brown
 
 highlight SpecialKey NONE
 highlight SpecialKey ctermfg=Brown
