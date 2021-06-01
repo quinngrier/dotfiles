@@ -9,7 +9,9 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-export LC_ALL=C
+LC_ALL=C
+readonly LC_ALL
+export LC_ALL
 
 case $#,$1 in
   1,--help)
