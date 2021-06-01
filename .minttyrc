@@ -18,4 +18,4 @@ FontHeight=14
 Locale=C
 MiddleClickAction=void
 ScrollbackLines=1000000
-Term=mintty
+Term=xterm
