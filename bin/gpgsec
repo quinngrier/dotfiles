@@ -23,15 +23,15 @@ If <value> is nonempty, it will be encrypted and written to the
 be deleted. Otherwise, if <value> is omitted, the file will be decrypted
 and written to standard output.
 
-gpg2 must already be installed and a default-key must already be set up
-in the ~/.gnupg/gpg.conf file. The --default-recipient-self option will
-be used when performing encryption.
-
 <name> may freely contain directory components, allowing secrets to be
 organized into directories. For tab completion convenience, <name> may
 optionally be prefixed with "~/.gpgsec/" and suffixed with ".gpg".
 
 If <value> is "-", it will be read from standard input.
+
+gpg2 must already be installed and a default-key must already be set up
+in the ~/.gnupg/gpg.conf file. The --default-recipient-self option will
+be used when encrypting.
 EOF
     exit 0
   ;;
