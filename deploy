@@ -114,7 +114,22 @@ EOF
       ;;
 
       -?*)
-        printf '%s\n' "$0: unknown option: $1" >&2
+        awk -v argv0="$0" '
+          BEGIN { printf "%s", argv0 ": unknown option: "; }
+          {
+            if (NR > 1 || /^--/) {
+              n = sub(/=.*/, "");
+              printf "%s", (NR > 1 ? "\n" : "") $0;
+              if (n) exit 0;
+            } else {
+              printf "%s", substr($0, 1, 2) (/^-$/ ? "\n" : "");
+              exit 0;
+            }
+          }
+          END { printf "%s", "\n"; }
+        ' <<EOF >&2
+$1
+EOF
         exit 1
       ;;
 
