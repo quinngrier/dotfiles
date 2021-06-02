@@ -8,14 +8,31 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
+# This script is written in portable shell.
+#
 
 LC_ALL=C
 readonly LC_ALL
 export LC_ALL
 
-case $#,$1 in
-  1,--help)
-    cat <<'EOF' || exit $?
+gpg2=${GPG2_COMMAND-gpg2}
+readonly gpg2
+
+parse_options=:
+unset name
+unset value
+
+case $# in
+  0) set x ;;
+  *) set x "$@" ;;
+esac
+until shift && (exit ${1+1}0); do
+
+  if $parse_options; then
+    case $1 in
+
+      --help)
+        cat <<'EOF' || exit $?
 Usage: gpgsec <name> [<value>]
 
 Manages GPG-encrypted secrets in the ~/.gpgsec directory.
@@ -35,21 +52,72 @@ gpg2 must already be installed and a default-key must already be set up
 in the ~/.gnupg/gpg.conf file. The --default-recipient-self option will
 be used when encrypting.
 EOF
-    exit 0
-  ;;
-  [1-2],*)
-    :
-  ;;
-  *)
-    cat <<'EOF' >&2
-gpgsec: bad usage, try "gpgsec --help"
-EOF
-    exit 1
-  ;;
-esac
+        exit 0
+      ;;
 
-name=$1
+      --help=*)
+        printf '%s\n' "$0: option forbids an argument: --help" >&2
+        exit 1
+      ;;
+
+      --)
+        parse_options=false
+        continue
+      ;;
+
+      --=*)
+        printf '%s\n' "$0: option forbids an argument: --" >&2
+        exit 1
+      ;;
+
+      -?*)
+        awk -v argv0="$0" '
+          BEGIN { printf "%s", argv0 ": unknown option: "; }
+          {
+            if (NR > 1 || /^--/) {
+              n = sub(/=.*/, "");
+              printf "%s", (NR > 1 ? "\n" : "") $0;
+              if (n) exit 0;
+            } else {
+              printf "%s", substr($0, 1, 2) (/^-$/ ? "\n" : "");
+              exit 0;
+            }
+          }
+          END { printf "%s", "\n"; }
+        ' <<EOF >&2
+$1
+EOF
+        exit 1
+      ;;
+
+    esac
+  fi
+
+  if ${name+false} :; then
+
+    name=$1
+
+  elif ${value+false} :; then
+
+    value=$1
+
+  else
+
+    printf '%s\n' "$0: too many operands: $1" >&2
+    exit 1
+
+  fi
+
+done
+
+readonly parse_options
 readonly name
+readonly value
+
+if ${name+false} :; then
+  printf '%s\n' "$0: <name> must be given" >&2
+  exit 1
+fi
 
 case $name in
   .. | ../* | */../* | */..)
@@ -79,23 +147,18 @@ case $file in
 esac
 readonly file
 
-case $# in
-  1)
-    gpg2 -q -d <"$file"
-    exit $?
-  ;;
-esac
-
-value=$2
-readonly value
+if ${value+false} :; then
+  eval " $gpg2 -q -d" <"$file" || exit $?
+  exit 0
+fi
 
 case $value in
   '')
     if command -v shred >/dev/null; then
       shred "$file"
     fi
-    rm -f "$file"
-    exit $?
+    rm -f "$file" || exit $?
+    exit 0
   ;;
 esac
 
@@ -108,15 +171,16 @@ else
   rmdir "$file" || exit $?
 fi
 
+x='-q -a --default-recipient-self -e -s'
 case $value in
   -)
-    gpg2 -q -a --default-recipient-self -e -s >"$file"
-    exit $?
+    eval " $gpg2 $x" >"$file" || exit $?
   ;;
   *)
-    gpg2 -q -a --default-recipient-self -e -s >"$file" <<EOF
+    eval " $gpg2 $x" >"$file" <<EOF || exit $?
 $value
 EOF
-    exit $?
   ;;
 esac
+
+exit 0
