@@ -92,8 +92,8 @@ character is empty, it is adjusted to ".".
 Examples:
 
       ./deploy ~   Deploys the dotfiles to your home directory.
-      ./deploy R:  Deploys the dotfiles to your home directory
-                   on the remote machine whose ssh address is R.
+      ./deploy x:  Deploys the dotfiles to your home directory
+                   on the remote machine whose ssh address is x.
 EOF
         exit 0
       ;;
