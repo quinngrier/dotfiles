@@ -9,60 +9,105 @@
 "
 
 "-----------------------------------------------------------------------
-" Colors
+" Encoding
+"-----------------------------------------------------------------------
+"
+" The encoding option must be set before any use of Unicode in this
+" vimrc file itself.
+"
+
+set encoding=utf-8
+
+"-----------------------------------------------------------------------
+" Syntax highlighting
 "-----------------------------------------------------------------------
 
 syntax off
 
+"-----------------------------------------------------------------------
+" Highlight groups
+"-----------------------------------------------------------------------
+
 highlight ColorColumn NONE
+highlight! link ColorColumn NONE
 highlight ColorColumn term=reverse ctermbg=4
 
 highlight IncSearch NONE
+highlight! link IncSearch NONE
 highlight IncSearch term=reverse ctermfg=0 ctermbg=3
 
 highlight LineNr NONE
+highlight! link LineNr NONE
 highlight link LineNr ColorColumn
 
 highlight MatchParen NONE
+highlight! link MatchParen NONE
 highlight MatchParen term=reverse cterm=reverse
 
 highlight NonText NONE
+highlight! link NonText NONE
 highlight NonText ctermfg=3
 
 highlight Search NONE
+highlight! link Search NONE
 highlight Search term=underline ctermbg=5
 
 highlight SpecialKey NONE
+highlight! link SpecialKey NONE
 highlight link SpecialKey NonText
 
+highlight StatusLine NONE
+highlight! link StatusLine NONE
+highlight StatusLine term=reverse,underline
+                   \ cterm=underline ctermfg=0 ctermbg=3
+
+highlight StatusLineNC NONE
+highlight! link StatusLineNC NONE
+highlight StatusLineNC term=reverse,underline
+                     \ cterm=underline ctermbg=4
+
+highlight StatusLineTerm NONE
+highlight! link StatusLineTerm NONE
+highlight link StatusLineTerm StatusLine
+
+highlight StatusLineTermNC NONE
+highlight! link StatusLineTermNC NONE
+highlight link StatusLineTermNC StatusLineNC
+
+highlight TabLine NONE
+highlight! link TabLine NONE
+highlight link TabLine StatusLineNC
+
+highlight TabLineFill NONE
+highlight! link TabLineFill NONE
+highlight link TabLineFill StatusLineNC
+
+highlight TabLineSel NONE
+highlight! link TabLineSel NONE
+highlight link TabLineSel StatusLine
+
+highlight VertSplit NONE
+highlight! link VertSplit NONE
+highlight VertSplit term=reverse ctermfg=4 ctermbg=7
+
 highlight Visual NONE
-highlight Visual term=reverse ctermbg=5
-
-"-----------------------------------------------------------------------
-" Search highlighting
-"-----------------------------------------------------------------------
-
-set hlsearch
-set incsearch
-nnoremap <silent> <C-h> :nohlsearch<CR>
-
-"-----------------------------------------------------------------------
-" Parenthesis matching
-"-----------------------------------------------------------------------
-
-set cpoptions+=M
-
-set matchpairs=
-set matchpairs+=(:)
-set matchpairs+=<:>
-set matchpairs+=[:]
-set matchpairs+={:}
+highlight! link Visual NONE
+highlight link Visual IncSearch
 
 "-----------------------------------------------------------------------
 
 set colorcolumn=73
 
-set encoding=utf-8
+set cpoptions=aABceFMs
+
+set fillchars=
+if &t_Co
+  set fillchars+=stl:\ 
+else
+  set fillchars+=stl:^
+endif
+set fillchars+=stlnc:\ 
+set fillchars+=vert:▉
 
 set history=10000
 
@@ -73,7 +118,13 @@ set listchars+=extends:┅
 set listchars+=nbsp:▁
 set listchars+=precedes:┅
 set listchars+=tab:┣━╸
-set listchars+=trail:╳
+set listchars+=trail:▒
+
+set matchpairs=
+set matchpairs+=(:)
+set matchpairs+=<:>
+set matchpairs+=[:]
+set matchpairs+={:}
 
 set nojoinspaces
 
@@ -84,6 +135,30 @@ set textwidth=72
 set viminfo=
 set viminfo+='1000
 set viminfo+=s1000
+
+"-----------------------------------------------------------------------
+" Search highlighting
+"-----------------------------------------------------------------------
+
+set hlsearch
+set incsearch
+
+function! ToggleSearchHighlightingExpr()
+  let l:x = ""
+  if &hlsearch
+    let l:x .= ":let v:hlsearch = " . !v:hlsearch . "\n"
+    if !v:hlsearch
+      let l:x .= ":echo \"search highlighting on\"\n"
+    else
+      let l:x .= ":echo \"search highlighting off\"\n"
+    endif
+  endif
+  return l:x
+endfunction
+
+nnoremap <silent><expr> <C-h> ToggleSearchHighlightingExpr()
+xnoremap <silent> <C-h> :<C-u>:let v:hlsearch = !v:hlsearch<CR>gv
+inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 
 "-----------------------------------------------------------------------
 
@@ -132,13 +207,15 @@ nnoremap <silent> <C-k> :call Reformat()<CR>
 
 "-----------------------------------------------------------------------
 
-aug vimrc
-  au!
-  au BufNewFile,BufRead,VimEnter * setl fo=q
-aug END
+augroup vimrc
+  autocmd!
+  autocmd BufNewFile,BufRead,VimEnter * setl fo=q
+augroup END
 
 autocmd FileType vim set comments=:\\"
 
+"-----------------------------------------------------------------------
+" Private vimrc file
 "-----------------------------------------------------------------------
 
 if filereadable(expand('~/.vimrc-private'))
