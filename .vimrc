@@ -144,13 +144,14 @@ set hlsearch
 set incsearch
 
 function! ToggleSearchHighlightingExpr()
-  let l:x = ""
+  let l:x = ''
   if &hlsearch
-    let l:x .= ":let v:hlsearch = " . !v:hlsearch . "\n"
+    let l:x .= ':let v:hlsearch = ' . !v:hlsearch . "\n"
     if !v:hlsearch
-      let l:x .= ":echo \"search highlighting on\"\n"
+      let l:x .= ':echo "search highlighting on: "'
+      let l:x .= ' . "/" . getreg("/") . "/"' . "\n"
     else
-      let l:x .= ":echo \"search highlighting off\"\n"
+      let l:x .= ':echo "search highlighting off"' . "\n"
     endif
   endif
   return l:x
