@@ -117,7 +117,7 @@ set listchars=
 set listchars+=extends:┅
 set listchars+=nbsp:▁
 set listchars+=precedes:┅
-set listchars+=tab:┣━╸
+set listchars+=tab:┣━━
 set listchars+=trail:▒
 
 set matchpairs=
