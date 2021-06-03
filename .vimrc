@@ -15,28 +15,28 @@
 syntax off
 
 highlight ColorColumn NONE
-highlight ColorColumn term=reverse ctermbg=DarkBlue
+highlight ColorColumn term=reverse ctermbg=4
 
 highlight IncSearch NONE
-highlight IncSearch term=reverse ctermfg=Black ctermbg=Yellow
+highlight IncSearch term=reverse ctermfg=0 ctermbg=3
 
 highlight LineNr NONE
-highlight LineNr ctermfg=DarkBlue
+highlight link LineNr ColorColumn
 
 highlight MatchParen NONE
-highlight MatchParen term=reverse ctermfg=Black ctermbg=Yellow
+highlight MatchParen term=reverse cterm=reverse
 
 highlight NonText NONE
-highlight NonText ctermfg=Brown
+highlight NonText ctermfg=3
 
 highlight Search NONE
-highlight Search term=reverse ctermfg=Black ctermbg=Brown
+highlight Search term=underline ctermbg=5
 
 highlight SpecialKey NONE
-highlight SpecialKey ctermfg=Brown
+highlight link SpecialKey NonText
 
 highlight Visual NONE
-highlight Visual term=reverse ctermfg=Black ctermbg=DarkGreen
+highlight Visual term=reverse ctermbg=5
 
 "-----------------------------------------------------------------------
 " Search highlighting
