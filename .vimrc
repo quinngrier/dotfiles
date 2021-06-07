@@ -32,6 +32,10 @@ highlight ColorColumn NONE
 highlight! link ColorColumn NONE
 highlight ColorColumn term=reverse ctermbg=4
 
+highlight CursorLineNr NONE
+highlight! link CursorLineNr NONE
+highlight CursorLineNr term=reverse,underline ctermbg=5
+
 highlight IncSearch NONE
 highlight! link IncSearch NONE
 highlight IncSearch term=reverse ctermfg=0 ctermbg=3
@@ -135,6 +139,13 @@ set textwidth=72
 set viminfo=
 set viminfo+='1000
 set viminfo+=s1000
+
+"-----------------------------------------------------------------------
+" Cursor line highlighting
+"-----------------------------------------------------------------------
+
+set cursorline
+set cursorlineopt=number
 
 "-----------------------------------------------------------------------
 " Search highlighting
