@@ -216,6 +216,7 @@ function! Reformat()
     execute 'silent %!clang-format ' . l:args
     call setpos('.', l:pos)
 
+    redraw
     echo "reformatted"
 
     return
