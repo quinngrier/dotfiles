@@ -190,6 +190,8 @@ function! Reformat()
   let l:args = GetClangFormatArgs()
   if l:args != ''
 
+    echo "reformatting..."
+
     " Make undo restore the cursor properly.
     normal! ix
     normal! x
@@ -198,9 +200,13 @@ function! Reformat()
     execute 'silent %!clang-format ' . l:args
     call setpos('.', l:pos)
 
+    echo "reformatted"
+
     return
 
   endif
+
+  echo "i don't know how to reformat this file"
 
 endfunction
 
