@@ -223,7 +223,12 @@ function! Reformat()
 
   endif
 
-  echo "i don't know how to reformat this file"
+  if @% =~ '\v^[!-&(-~]+$'
+    let l:x = @%
+  else
+    let l:x = shellescape(@%)
+  endif
+  echo "reformat: unknown file name: " . l:x
 
 endfunction
 
