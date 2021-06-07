@@ -62,13 +62,11 @@ highlight link SpecialKey NonText
 
 highlight StatusLine NONE
 highlight! link StatusLine NONE
-highlight StatusLine term=reverse,underline
-                   \ cterm=underline ctermfg=0 ctermbg=3
+highlight StatusLine term=reverse,underline cterm=underline ctermbg=5
 
 highlight StatusLineNC NONE
 highlight! link StatusLineNC NONE
-highlight StatusLineNC term=reverse,underline
-                     \ cterm=underline ctermbg=4
+highlight StatusLineNC term=reverse cterm=underline ctermbg=4
 
 highlight StatusLineTerm NONE
 highlight! link StatusLineTerm NONE
@@ -92,7 +90,7 @@ highlight link TabLineSel StatusLine
 
 highlight VertSplit NONE
 highlight! link VertSplit NONE
-highlight VertSplit term=reverse ctermfg=4 ctermbg=7
+highlight VertSplit ctermfg=4 ctermbg=7
 
 highlight Visual NONE
 highlight! link Visual NONE
@@ -105,11 +103,7 @@ set colorcolumn=73
 set cpoptions=aABceFMs
 
 set fillchars=
-if &t_Co
-  set fillchars+=stl:\ 
-else
-  set fillchars+=stl:^
-endif
+set fillchars+=stl:\ 
 set fillchars+=stlnc:\ 
 set fillchars+=vert:▉
 
