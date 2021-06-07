@@ -9,6 +9,12 @@
 "
 
 "-----------------------------------------------------------------------
+
+augroup vimrc
+  autocmd!
+augroup END
+
+"-----------------------------------------------------------------------
 " Encoding
 "-----------------------------------------------------------------------
 "
@@ -126,13 +132,18 @@ set matchpairs+={:}
 
 set nojoinspaces
 
-set number
-
 set textwidth=72
 
 set viminfo=
 set viminfo+='1000
 set viminfo+=s1000
+
+"-----------------------------------------------------------------------
+" Line numbering
+"-----------------------------------------------------------------------
+
+set number
+autocmd vimrc FileType help setlocal number
 
 "-----------------------------------------------------------------------
 " Cursor line highlighting
@@ -219,12 +230,8 @@ nnoremap <silent> <C-k> :call Reformat()<CR>
 
 "-----------------------------------------------------------------------
 
-augroup vimrc
-  autocmd!
-  autocmd BufNewFile,BufRead,VimEnter * setl fo=q
-augroup END
-
-autocmd FileType vim set comments=:\\"
+autocmd vimrc BufNewFile,BufRead,VimEnter * setl fo=q
+autocmd vimrc FileType vim set comments=:\\"
 
 "-----------------------------------------------------------------------
 " Private vimrc file
