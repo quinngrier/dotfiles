@@ -164,10 +164,10 @@ function! ToggleSearchHighlightingExpr()
   if &hlsearch
     let l:x .= ':let v:hlsearch = ' . !v:hlsearch . "\n"
     if !v:hlsearch
-      let l:x .= ':echo "search highlighting on: "'
+      let l:x .= ':echo "search highlighting: "'
       let l:x .= ' . "/" . getreg("/") . "/"' . "\n"
     else
-      let l:x .= ':echo "search highlighting off"' . "\n"
+      let l:x .= ':echo "search highlighting: off"' . "\n"
     endif
   endif
   return l:x
@@ -203,10 +203,11 @@ endfunction
 
 function! Format()
 
+  redraw
+  echo "formatting..."
+
   let l:args = GetClangFormatArgs()
   if l:args != ''
-
-    echo "reformatting..."
 
     " Make undo restore the cursor properly.
     normal! ix
@@ -217,7 +218,7 @@ function! Format()
     call setpos('.', l:pos)
 
     redraw
-    echo "reformatted"
+    echo "formatting...done"
 
     return
 
@@ -228,7 +229,9 @@ function! Format()
   else
     let l:x = shellescape(@%)
   endif
-  echo "reformat: unknown file name: " . l:x
+
+  redraw
+  echo "formatting...unknown file name: " . l:x
 
 endfunction
 
