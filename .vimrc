@@ -201,7 +201,7 @@ function! GetClangFormatArgs()
   return ''
 endfunction
 
-function! Reformat()
+function! Format()
 
   let l:args = GetClangFormatArgs()
   if l:args != ''
@@ -232,7 +232,7 @@ function! Reformat()
 
 endfunction
 
-nnoremap <silent> <C-k> :call Reformat()<CR>
+nnoremap <silent> <C-k> :call Format()<CR>
 
 "-----------------------------------------------------------------------
 
