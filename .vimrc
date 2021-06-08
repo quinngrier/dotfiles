@@ -223,7 +223,7 @@ function! Reformat()
 
   endif
 
-  if @% =~ '\v^[!-&(-~]+$'
+  if @% =~ '\v^[!#-&(-~]+$'
     let l:x = @%
   else
     let l:x = shellescape(@%)
