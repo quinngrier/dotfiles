@@ -19,3 +19,10 @@ Locale=C
 MiddleClickAction=void
 ScrollbackLines=1000000
 Term=xterm
+
+#-----------------------------------------------------------------------
+
+SearchBackgroundColour=191,0,191
+SearchCurrentColour=191,191,0
+
+#-----------------------------------------------------------------------
