@@ -61,18 +61,6 @@ export LC_ALL
 
 #-----------------------------------------------------------------------
 
-unset CLASSPATH
-CLASSPATH=
-CLASSPATH+=${CLASSPATH:+:}.
-CLASSPATH+=${CLASSPATH:+:}*
-CLASSPATH+=${CLASSPATH:+:}/usr/local/share/java
-CLASSPATH+=${CLASSPATH:+:}/usr/local/share/java/*
-CLASSPATH+=${CLASSPATH:+:}/usr/share/java
-CLASSPATH+=${CLASSPATH:+:}/usr/share/java/*
-export CLASSPATH
-
-#-----------------------------------------------------------------------
-
 PATH=$HOME/bin:$PATH
 export PATH
 
