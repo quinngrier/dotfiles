@@ -24,8 +24,8 @@
 #                Yes       Yes         Yes           No
 #
 # It's not very useful for interactive login sessions to skip ~/.bashrc,
-# so we make ~/.bash_profile run it as the last step if the session is
-# interactive:
+# so we make ~/.bash_profile run ~/.bashrc as its last step if the
+# session is interactive:
 #
 #                           Modified behavior
 #
