@@ -118,29 +118,52 @@ HISTSIZE=$HISTFILESIZE
 # The "[0]" part is the exit status of the last command. If the command
 # was a pipeline, the exit status of every command in the pipeline will
 # appear, separated by "|" characters. For example, "true | false" will
-# yield "[0|1]".
+# yield "[0|1]". The first line of the prompt string is underlined all
+# the way to the edge of the window for visual distinction.
 #
 # The window title looks like this:
 #
 #       [user@host:/current/working/directory]
 #
 
-function draw_pipestatus {
+function print_ps1 {
   local -r e=$'\001\033'
   local -r m=$'m\002'
+  local -r a=$'\007\002'
+  local -r u="$1"
+  local -r H="$2"
+  local -r w="$3"
+  shift 3
   local s=
+  local n=$COLUMNS
   local x
-  for x; do
-    s+="${s:+|}$e[$((x ? 31 : 32))$m$x$e[0$m"
+  local y
+  s+="$e[0$m"
+  s+="$e]0;[$u@$H:$w]$a"
+  s+="$e[4$m"
+  s+="["
+  n=$((n - 1))
+  x=
+  for y; do
+    if [[ "$x" != "" ]]; then
+      x+="|"
+      n=$((n - 1))
+    fi
+    x+="$e[$((y ? 31 : 32))$m$y$e[39$m"
+    n=$((n - ${#y}))
   done
+  s+="$x"
+  x="][$u@$H:$w]"
+  s+="$x"
+  n=$((n - ${#x}))
+  for ((; n > 0; --n)); do
+    s+=" "
+  done
+  s+="$e[0$m"$'\n$ '
   printf '%s' "$s"
 }
 
-PS1='\[\e[0m\]'
-PS1+='\[\e]0;[\u@\H:\w]\a\]'
-PS1+='[$(draw_pipestatus "${PIPESTATUS[@]}")]'
-PS1+='[\u@\H:\w]'
-PS1+='\n\$ '
+PS1="\$(print_ps1 '\\u' '\\H' '\\w' \"\${PIPESTATUS[@]}\")"
 
 #-----------------------------------------------------------------------
 # gpg-agent and ssh-agent
