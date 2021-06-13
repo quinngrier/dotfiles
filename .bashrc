@@ -131,7 +131,13 @@ HISTSIZE=$HISTFILESIZE
 # output a final newline character.
 #
 
-PS1='\[\e[0m\]\[\e]0;\u@\H:\w\a\]\[\e[37;44m\]\[\e[K\]'
+PS1='\[\e[0m\]'
+PS1+='\[\e]0;\u@\H:\w\a\]'
+if [[ "$VIM_TERMINAL" != '' ]]; then
+  PS1+='\[\e[4m\]\[\e[K\]'
+else
+  PS1+='\[\e[37;44m\]\[\e[K\]'
+fi
 PS1+='[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
 
 #-----------------------------------------------------------------------
