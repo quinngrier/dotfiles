@@ -116,29 +116,31 @@ HISTSIZE=$HISTFILESIZE
 #       $
 #
 # The "[0]" part is the exit status of the last command. If the command
-# was a pipeline, then the exit status of every command in the pipeline
-# will appear, separated by spaces. For example, "true | false | false"
-# yields "[0 1 1]". The first line of the prompt string is colored all
-# the way to the edge of the window for visual distinction.
+# was a pipeline, the exit status of every command in the pipeline will
+# appear, separated by "|" characters. For example, "true | false" will
+# yield "[0|1]".
 #
 # The window title looks like this:
 #
-#       user@host:/current/working/directory
-#
-# Note the use of \e[K to clear from the cursor to the end of the line
-# instead of \e[2K to clear the entire line. Clearing the entire line
-# would damage the last line of output of any program that doesn't
-# output a final newline character.
+#       [user@host:/current/working/directory]
 #
 
+function draw_pipestatus {
+  local -r e=$'\001\033'
+  local -r m=$'m\002'
+  local s=
+  local x
+  for x; do
+    s+="${s:+|}$e[$((x ? 31 : 32))$m$x$e[0$m"
+  done
+  printf '%s' "$s"
+}
+
 PS1='\[\e[0m\]'
-PS1+='\[\e]0;\u@\H:\w\a\]'
-if [[ "$VIM_TERMINAL" != '' ]]; then
-  PS1+='\[\e[4m\]\[\e[K\]'
-else
-  PS1+='\[\e[37;44m\]\[\e[K\]'
-fi
-PS1+='[${PIPESTATUS[@]}][\u@\H:\w]\[\e[0m\]\n\$ '
+PS1+='\[\e]0;[\u@\H:\w]\a\]'
+PS1+='[$(draw_pipestatus "${PIPESTATUS[@]}")]'
+PS1+='[\u@\H:\w]'
+PS1+='\n\$ '
 
 #-----------------------------------------------------------------------
 # gpg-agent and ssh-agent
