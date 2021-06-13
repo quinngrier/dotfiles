@@ -40,6 +40,7 @@ set \
 
 shopt -s \
   checkjobs \
+  checkwinsize \
   cmdhist \
   dotglob \
   extglob \
