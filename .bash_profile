@@ -71,6 +71,12 @@ unset x
 
 #-----------------------------------------------------------------------
 
+unset GREP_COLORS
+GREP_COLORS='ms=45:mc=45:sl=:cx=:fn=35:ln=32:bn=32:se=36'
+export GREP_COLORS
+
+#-----------------------------------------------------------------------
+
 PATH=$HOME/bin:$PATH
 export PATH
 
