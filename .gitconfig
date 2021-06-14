@@ -15,5 +15,11 @@
 	ladgo = log --all --decorate --graph --oneline
 	ldgo = log --decorate --graph --oneline
 
+[color]
+	grep = auto
+
+[color "grep"]
+	match = normal magenta
+
 [include]
 	path = .gitconfig-private
