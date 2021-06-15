@@ -127,8 +127,11 @@ HISTSIZE=$HISTFILESIZE
 # The "[0]" part is the exit status of the last command. If the command
 # was a pipeline, the exit status of every command in the pipeline will
 # appear, separated by "|" characters. For example, "true | false" will
-# yield "[0|1]". The first line of the prompt string is underlined all
-# the way to the edge of the window for visual distinction.
+# yield "[0|1]". Each zero exit status will be colored green, and each
+# nonzero exit status will be colored red.
+#
+# The first line of the prompt string is underlined all the way to the
+# edge of the window for visual distinction.
 #
 # The window title looks like this:
 #
