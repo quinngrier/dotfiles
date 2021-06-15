@@ -142,19 +142,13 @@ function print_ps1 {
   local -r e=$'\001\033'
   local -r m=$'m\002'
   local -r a=$'\007\002'
-
-  local -r u="$1"
-  local -r H="$2"
-  local -r w="$3"
-  shift 3
-
   local s=
   local n=$COLUMNS
   local x
 
   s+="$e[0$m"
 
-  s+="$e]0;[$u@$H:$w]$a"
+  s+="$e]0;[$USER@$HOSTNAME:$PWD]$a"
 
   s+="$e[4$m"
 
@@ -166,7 +160,7 @@ function print_ps1 {
   done
   s="${s%?}]"
 
-  x="[$u@$H:$w]"
+  x="[$USER@$HOSTNAME:$PWD]"
   s+="$x"
   n=$((n - ${#x}))
 
@@ -179,7 +173,7 @@ function print_ps1 {
   printf '%s' "$s"
 }
 
-PS1="\$(print_ps1 '\\u' '\\H' '\\w' \"\${PIPESTATUS[@]}\")"
+PS1='$(print_ps1 "${PIPESTATUS[@]}")'
 
 #-----------------------------------------------------------------------
 # gpg-agent and ssh-agent
