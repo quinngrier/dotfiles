@@ -144,6 +144,7 @@ function print_ps1 {
   local -r a=$'\007\002'
   local s=
   local n=$COLUMNS
+  local p=
   local x
 
   s+="$e[0$m"
@@ -153,12 +154,13 @@ function print_ps1 {
   s+="$e[4$m"
 
   s+="["
-  n=$((n - 1))
   for x; do
-    s+="$e[$((x ? 31 : 32))$m$x$e[39$m|"
-    n=$((n - ${#x} - 1))
+    s+="$p$e[$((x == 0 ? 32 : 31))$m$x$e[39$m"
+    n=$((n - ${#p} - ${#x}))
+    p='|'
   done
-  s="${s%?}]"
+  s+="]"
+  n=$((n - 2))
 
   x="[$USER@$HOSTNAME:$PWD]"
   s+="$x"
