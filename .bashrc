@@ -139,36 +139,40 @@ function print_ps1 {
   local -r e=$'\001\033'
   local -r m=$'m\002'
   local -r a=$'\007\002'
+
   local -r u="$1"
   local -r H="$2"
   local -r w="$3"
   shift 3
+
   local s=
   local n=$COLUMNS
   local x
-  local y
+
   s+="$e[0$m"
+
   s+="$e]0;[$u@$H:$w]$a"
+
   s+="$e[4$m"
+
   s+="["
   n=$((n - 1))
-  x=
-  for y; do
-    if [[ "$x" != "" ]]; then
-      x+="|"
-      n=$((n - 1))
-    fi
-    x+="$e[$((y ? 31 : 32))$m$y$e[39$m"
-    n=$((n - ${#y}))
+  for x; do
+    s+="$e[$((x ? 31 : 32))$m$x$e[39$m|"
+    n=$((n - ${#x} - 1))
   done
-  s+="$x"
-  x="][$u@$H:$w]"
+  s="${s%?}]"
+
+  x="[$u@$H:$w]"
   s+="$x"
   n=$((n - ${#x}))
-  for ((; n > 0; --n)); do
-    s+=" "
-  done
+
+  if ((n > 0)); then
+    s+=$(printf "%${n}s")
+  fi
+
   s+="$e[0$m"$'\n$ '
+
   printf '%s' "$s"
 }
 
