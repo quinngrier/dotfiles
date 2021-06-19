@@ -52,7 +52,7 @@ highlight link LineNr ColorColumn
 
 highlight MatchParen NONE
 highlight! link MatchParen NONE
-highlight MatchParen term=reverse cterm=reverse
+highlight MatchParen term=underline ctermbg=5
 
 highlight NonText NONE
 highlight! link NonText NONE
@@ -60,7 +60,7 @@ highlight NonText ctermfg=3
 
 highlight Search NONE
 highlight! link Search NONE
-highlight Search term=underline ctermbg=5
+highlight link Search MatchParen
 
 highlight SpecialKey NONE
 highlight! link SpecialKey NONE
