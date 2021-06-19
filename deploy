@@ -36,6 +36,8 @@ files='
   bin/sshqg
   bin/sshqg-gpgsec
   deploy
+  start/vim.bash
+  start/vim.cmd
 '
 readonly files
 
