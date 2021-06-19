@@ -180,34 +180,37 @@ inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 "-----------------------------------------------------------------------
 
 function! DoClangFormat(clang_format) range
-  let l:xs = []
-  let l:xs += ['c']
-  let l:xs += ['cpp']
-  let l:xs += ['cs']
-  let l:xs += ['h']
-  let l:xs += ['hpp']
-  let l:xs += ['java']
-  let l:xs += ['js']
-  let l:xs += map(copy(l:xs), 'v:val . ".m4"')
-  let l:xs += map(copy(l:xs), 'v:val . ".im"')
-  let l:xs += map(copy(l:xs), 'v:val . ".in"')
-  call map(l:xs, '"%(" . v:val . ")"')
-  let l:xs = '\.(' . join(l:xs, '|') . ')$'
-  let l:name = @%
-  if l:name =~ '\v' . l:xs
-    let l:name = substitute(l:name, '\v%(\.im)?%(\.in)?$', '', '')
-    let l:name = substitute(l:name, '\v.*' . l:xs, 'x.\1', '')
-    let l:clang_format_args = '--assume-filename=' . l:name
+  let l:x = '%(\.m4)?%(\.im)?%(\.in)?$'
+  let l:y = '\.%(c|cpp|cs|h|hpp|java|js)' . l:x
+  let l:f = @%
+  if l:f =~ '\v' . l:y
+    let l:f = substitute(l:f, '\v' . l:x, '', '')
+    let l:f = substitute(l:f, '\v.*\.', 'x.', '')
+    let l:clang_format_args = '--assume-filename=' . l:f
   else
     return
   endif
 
-  " Make undo restore the cursor properly.
-  normal! ix
-  normal! x
+  let l:first = a:firstline
+  let l:last = a:lastline
 
-  let l:indent = getline(a:firstline)
+  let l:indent = getline(l:first)
   let l:indent = substitute(l:indent, '[^ 	].*', '', '')
+  let l:indent = substitute(l:indent, '	', '        ', '')
+  let l:indent = len(l:indent) / 2
+
+  let l:delete_first_line_of_file = 0
+  if l:indent > 0
+    if l:first == 1
+      normal! ggO
+      let l:first += 1
+      let l:last += 1
+      let l:delete_first_line_of_file = 1
+    endif
+    call append(l:last, repeat(['}'], l:indent))
+    call append(l:first - 1, repeat(['{'], l:indent))
+    let l:last += l:indent * 2
+  endif
 
   if @% =~ '\v\.java\.m4'
     let l:do_m4_adjustment = 1
@@ -216,7 +219,7 @@ function! DoClangFormat(clang_format) range
   endif
 
   let l:x = 'silent '
-  let l:x .= a:firstline . ',' . a:lastline . '!'
+  let l:x .= l:first . ',' . l:last . '!'
   if l:do_m4_adjustment
     let l:x .= 'sed "s/\\\$\\([1-9]\\)/_\\1/g" | '
   endif
@@ -224,8 +227,13 @@ function! DoClangFormat(clang_format) range
   if l:do_m4_adjustment
     let l:x .= ' | sed "s/_\\([1-9]\\)/\$\\1/g"'
   endif
-  let l:x .= ' | sed "/./s/^/' . l:indent . '/"'
+  let l:x .= ' | tail -n +' . (l:indent + 1)
+  let l:x .= repeat(' | sed \$d', l:indent)
   execute l:x
+
+  if l:delete_first_line_of_file
+    normal! ggdd
+  endif
 
   echo 'make sure the output is nonempty'
 endfunction
@@ -236,6 +244,10 @@ function! Format() range
   echo "formatting..."
 
   const l:curpos = getcurpos()
+
+  " Make undo restore the cursor properly.
+  normal! ix
+  normal! "_x
 
   let l:formatted = 0
 
