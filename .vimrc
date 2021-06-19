@@ -180,22 +180,22 @@ inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 "-----------------------------------------------------------------------
 
 function! DoClangFormat(clang_format) range
-  let l:suffix = []
-  let l:suffix += ['c']
-  let l:suffix += ['cpp']
-  let l:suffix += ['cs']
-  let l:suffix += ['h']
-  let l:suffix += ['hpp']
-  let l:suffix += ['java']
-  let l:suffix += ['js']
-  let l:suffix += map(copy(l:suffix), 'v:val . ".im"')
-  let l:suffix += map(copy(l:suffix), 'v:val . ".in"')
-  call map(l:suffix, '"%(" . v:val . ")"')
-  let l:suffix = '\.(' . join(l:suffix, '|') . ')$'
+  let l:xs = []
+  let l:xs += ['c']
+  let l:xs += ['cpp']
+  let l:xs += ['cs']
+  let l:xs += ['h']
+  let l:xs += ['hpp']
+  let l:xs += ['java']
+  let l:xs += ['js']
+  let l:xs += map(copy(l:xs), 'v:val . ".im"')
+  let l:xs += map(copy(l:xs), 'v:val . ".in"')
+  call map(l:xs, '"%(" . v:val . ")"')
+  let l:xs = '\.(' . join(l:xs, '|') . ')$'
   let l:name = @%
-  if l:name =~ '\v' . l:suffix
+  if l:name =~ '\v' . l:xs
     let l:name = substitute(l:name, '\v%(\.im)?%(\.in)?$', '', '')
-    let l:name = substitute(l:name, '\v.*' . l:suffix, 'x.\1', '')
+    let l:name = substitute(l:name, '\v.*' . l:xs, 'x.\1', '')
     let l:clang_format_args = '--assume-filename=' . l:name
   else
     return
