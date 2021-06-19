@@ -188,6 +188,7 @@ function! DoClangFormat(clang_format) range
   let l:xs += ['hpp']
   let l:xs += ['java']
   let l:xs += ['js']
+  let l:xs += map(copy(l:xs), 'v:val . ".m4"')
   let l:xs += map(copy(l:xs), 'v:val . ".im"')
   let l:xs += map(copy(l:xs), 'v:val . ".in"')
   call map(l:xs, '"%(" . v:val . ")"')
@@ -208,9 +209,21 @@ function! DoClangFormat(clang_format) range
   let l:indent = getline(a:firstline)
   let l:indent = substitute(l:indent, '[^ 	].*', '', '')
 
+  if @% =~ '\v\.java\.m4'
+    let l:do_m4_adjustment = 1
+  else
+    let l:do_m4_adjustment = 0
+  endif
+
   let l:x = 'silent '
-  let l:x .= a:firstline . ',' . a:lastline
-  let l:x .= '!' . a:clang_format . ' ' . l:clang_format_args
+  let l:x .= a:firstline . ',' . a:lastline . '!'
+  if l:do_m4_adjustment
+    let l:x .= 'sed "s/\\\$\\([1-9]\\)/_\\1/g" | '
+  endif
+  let l:x .= a:clang_format . ' ' . l:clang_format_args
+  if l:do_m4_adjustment
+    let l:x .= ' | sed "s/_\\([1-9]\\)/\$\\1/g"'
+  endif
   let l:x .= ' | sed "/./s/^/' . l:indent . '/"'
   execute l:x
 
