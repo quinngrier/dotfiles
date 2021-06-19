@@ -179,7 +179,7 @@ inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 
 "-----------------------------------------------------------------------
 
-function! GetClangFormatArgs()
+function! DoClangFormat(clang_format) range
   let l:suffix = []
   let l:suffix += ['c']
   let l:suffix += ['cpp']
@@ -196,32 +196,50 @@ function! GetClangFormatArgs()
   if l:name =~ '\v' . l:suffix
     let l:name = substitute(l:name, '\v%(\.im)?%(\.in)?$', '', '')
     let l:name = substitute(l:name, '\v.*' . l:suffix, 'x.\1', '')
-    return '--assume-filename=' . l:name
+    let l:clang_format_args = '--assume-filename=' . l:name
+  else
+    return
   endif
-  return ''
+
+  " Make undo restore the cursor properly.
+  normal! ix
+  normal! x
+
+  let l:indent = getline(a:firstline)
+  let l:indent = substitute(l:indent, '[^ 	].*', '', '')
+
+  let l:x = 'silent '
+  let l:x .= a:firstline . ',' . a:lastline
+  let l:x .= '!' . a:clang_format . ' ' . l:clang_format_args
+  let l:x .= ' | sed "/./s/^/' . l:indent . '/"'
+  execute l:x
+
+  echo 'make sure the output is nonempty'
 endfunction
 
-function! Format()
+function! Format() range
 
   redraw
   echo "formatting..."
 
-  let l:args = GetClangFormatArgs()
-  if l:args != ''
+  const l:curpos = getcurpos()
 
-    " Make undo restore the cursor properly.
-    normal! ix
-    normal! x
+  let l:formatted = 0
 
-    let l:pos = getcurpos()
-    execute 'silent %!clang-format ' . l:args
-    call setpos('.', l:pos)
+  if !l:formatted
+    let l:x = ':' . a:firstline . ',' . a:lastline
+    let l:x .= 'call DoClangFormat("clang-format")'
+    let l:x = execute(l:x, 'silent')
+    if l:x != ''
+      let l:formatted = 1
+    endif
+  endif
 
+  if l:formatted
+    call setpos('.', l:curpos)
     redraw
     echo "formatting...done"
-
     return
-
   endif
 
   if @% =~ '\v^[!#-&(-~]+$'
@@ -229,13 +247,13 @@ function! Format()
   else
     let l:x = shellescape(@%)
   endif
-
   redraw
   echo "formatting...unknown file name: " . l:x
 
 endfunction
 
-nnoremap <silent> <C-k> :call Format()<CR>
+nnoremap <silent> <C-k> :<C-u>%call Format()<CR>
+xnoremap <silent> <C-k> :call Format()<CR>
 
 "-----------------------------------------------------------------------
 
