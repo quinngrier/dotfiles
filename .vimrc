@@ -178,8 +178,12 @@ xnoremap <silent> <C-h> :<C-u>:let v:hlsearch = !v:hlsearch<CR>gv
 inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 
 "-----------------------------------------------------------------------
+"
+" :<C-u>call and all_lines are used instead of :<C-u>%call because the
+" latter seems to always move the cursor to line 1.
+"
 
-function! DoClangFormat(clang_format) range
+function! DoClangFormat(all_lines, clang_format) range
   let l:x = '%(\.m4)?%(\.im)?%(\.in)?$'
   let l:y = '\.%(c|cpp|cs|h|hpp|java|js)' . l:x
   let l:f = @%
@@ -191,22 +195,20 @@ function! DoClangFormat(clang_format) range
     return
   endif
 
-  let l:first = a:firstline
-  let l:last = a:lastline
+  if a:all_lines
+    let l:first = 1
+    let l:last = line('$')
+  else
+    let l:first = a:firstline
+    let l:last = a:lastline
+  endif
 
   let l:indent = getline(l:first)
   let l:indent = substitute(l:indent, '[^ 	].*', '', '')
   let l:indent = substitute(l:indent, '	', '        ', '')
   let l:indent = len(l:indent) / 2
 
-  let l:delete_first_line_of_file = 0
   if l:indent > 0
-    if l:first == 1
-      normal! ggO
-      let l:first += 1
-      let l:last += 1
-      let l:delete_first_line_of_file = 1
-    endif
     call append(l:last, repeat(['}'], l:indent))
     call append(l:first - 1, repeat(['{'], l:indent))
     let l:last += l:indent * 2
@@ -231,17 +233,19 @@ function! DoClangFormat(clang_format) range
   let l:x .= repeat(' | sed \$d', l:indent)
   execute l:x
 
-  if l:delete_first_line_of_file
-    normal! ggdd
-  endif
-
   echo 'make sure the output is nonempty'
 endfunction
 
-function! Format() range
+function! Format(all_lines) range
 
   redraw
   echo "formatting..."
+
+  if a:all_lines
+    let l:range = ''
+  else
+    let l:range = a:firstline . ',' . a:lastline
+  endif
 
   const l:curpos = getcurpos()
 
@@ -252,8 +256,9 @@ function! Format() range
   let l:formatted = 0
 
   if !l:formatted
-    let l:x = ':' . a:firstline . ',' . a:lastline
-    let l:x .= 'call DoClangFormat("clang-format")'
+    let l:x = l:range
+    let l:x .= 'call DoClangFormat(' . a:all_lines
+    let l:x .= ', "clang-format")'
     let l:x = execute(l:x, 'silent')
     if l:x != ''
       let l:formatted = 1
@@ -277,8 +282,8 @@ function! Format() range
 
 endfunction
 
-nnoremap <silent> <C-k> :<C-u>%call Format()<CR>
-xnoremap <silent> <C-k> :call Format()<CR>
+nnoremap <silent> <C-k> :<C-u>call Format(1)<CR>
+xnoremap <silent> <C-k> :call Format(0)<CR>
 
 "-----------------------------------------------------------------------
 
