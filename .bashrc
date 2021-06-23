@@ -135,7 +135,7 @@ HISTSIZE=$HISTFILESIZE
 #
 # The window title looks like this:
 #
-#       [user@host:/current/working/directory]
+#       user@host:/current/working/directory
 #
 
 function print_ps1 {
@@ -149,7 +149,7 @@ function print_ps1 {
 
   s+="$e[0$m"
 
-  s+="$e]0;[$USER@$HOSTNAME:$PWD]$a"
+  s+="$e]0;$USER@$HOSTNAME:$PWD$a"
 
   s+="$e[4$m"
 
