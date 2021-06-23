@@ -278,7 +278,7 @@ function! Format(all_lines) range
     let l:x = shellescape(@%)
   endif
   redraw
-  echo "formatting...unknown file name: " . l:x
+  echo "formatting...unknown file type: " . l:x
 
 endfunction
 
