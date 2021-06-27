@@ -18,8 +18,8 @@ augroup END
 " Encoding
 "-----------------------------------------------------------------------
 "
-" The encoding option must be set before any use of Unicode in this
-" vimrc file itself.
+" Note that the encoding option must be set before any use of Unicode in
+" this vimrc file itself.
 "
 
 set encoding=utf-8
