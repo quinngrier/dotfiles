@@ -286,6 +286,12 @@ nnoremap <silent> <C-k> :<C-u>call Format(1)<CR>
 xnoremap <silent> <C-k> :call Format(0)<CR>
 
 "-----------------------------------------------------------------------
+" Terminal windows
+"-----------------------------------------------------------------------
+
+set termwinscroll=100000
+
+"-----------------------------------------------------------------------
 
 autocmd vimrc BufNewFile,BufRead,VimEnter * setl fo=q
 autocmd vimrc FileType vim set comments=:\\"
