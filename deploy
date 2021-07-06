@@ -11,6 +11,10 @@
 # This script is written in portable shell.
 #
 
+LC_ALL=C
+readonly LC_ALL
+export LC_ALL
+
 files='
   .bash_profile
   .bashrc
@@ -40,10 +44,6 @@ files='
   start/vim.cmd
 '
 readonly files
-
-LC_ALL=C
-readonly LC_ALL
-export LC_ALL
 
 case $0 in
   ./deploy)
