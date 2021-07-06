@@ -45,15 +45,12 @@ files='
 '
 readonly files
 
-case $0 in
-  ./deploy)
-    :
-  ;;
-  *)
-    printf '%s\n' "$0: this script must only be run as ./deploy" >&2
-    exit 1
-  ;;
-esac
+case $0 in ./deploy)
+  :
+;; *)
+  printf '%s\n' "$0: this script must only be run as ./deploy" >&2
+  exit 1
+;; esac
 
 sed_script_1='
   s/'\''/&\\&&/g
@@ -69,24 +66,41 @@ sed_script_2='
 '
 readonly sed_script_2
 
-parse_options=:
 make_tarball=:
 
-case $# in
-  0) set x ;;
-  *) set x "$@" ;;
-esac
+parse_options=:
+
+case $# in 0)
+  set x
+;; *)
+  set x "$@"
+;; esac
+
 until shift && (exit ${1+1}0); do
 
   if $parse_options; then
-    case $1 in
 
-      #-----------------------------------------------------------------
-      # --help
-      #-----------------------------------------------------------------
+    #-------------------------------------------------------------------
+    # Options terminator
+    #-------------------------------------------------------------------
 
-      --help)
-        cat <<'EOF' || exit $?
+    case $1 in --)
+
+      parse_options=false
+      continue
+
+    ;; --=*)
+
+      printf '%s\n' "$0: option forbids an argument: --" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # --help
+    #-------------------------------------------------------------------
+
+    ;; --help)
+
+      cat <<'EOF' || exit $?
 Usage: ./deploy [<dir>]...
 
 Deploys the dotfiles to each <dir>. If <dir> contains a colon character,
@@ -102,65 +116,50 @@ Examples:
                    on the remote machine whose ssh address is x.
 EOF
         exit 0
-      ;;
 
-      --help=*)
-        printf '%s\n' "$0: option forbids an argument: --help" >&2
-        exit 1
-      ;;
+    ;; --help=*)
 
-      #-----------------------------------------------------------------
-      # Options terminator
-      #-----------------------------------------------------------------
+      printf '%s\n' "$0: option forbids an argument: --help" >&2
+      exit 1
 
-      --)
-        parse_options=false
-        continue
-      ;;
+    #-------------------------------------------------------------------
+    # Unknown options
+    #-------------------------------------------------------------------
 
-      --=*)
-        printf '%s\n' "$0: option forbids an argument: --" >&2
-        exit 1
-      ;;
+    ;; -?*)
 
-      #-----------------------------------------------------------------
-      # Unknown options
-      #-----------------------------------------------------------------
-
-      -?*)
-        awk -v argv0="$0" '
-          BEGIN {
-            printf "%s", argv0 ": unknown option: ";
-          }
-          {
-            if (NR == 1 && !/^--/) {
-              printf "%s", substr($0, 1, 2);
-              if (/^-$/) {
-                printf "%s", "\n";
-              }
-              exit 0;
-            }
-            if (NR > 1) {
+      awk -v argv0="$0" '
+        BEGIN {
+          printf "%s", argv0 ": unknown option: ";
+        }
+        {
+          if (NR == 1 && !/^--/) {
+            printf "%s", substr($0, 1, 2);
+            if (/^-$/) {
               printf "%s", "\n";
             }
-            n = sub(/=.*/, "");
-            printf "%s", $0;
-            if (n != 0) {
-              exit 0;
-            }
+            exit 0;
           }
-          END {
+          if (NR > 1) {
             printf "%s", "\n";
           }
-        ' <<EOF >&2
+          n = sub(/=.*/, "");
+          printf "%s", $0;
+          if (n != 0) {
+            exit 0;
+          }
+        }
+        END {
+          printf "%s", "\n";
+        }
+      ' <<EOF >&2
 $1
 EOF
-        exit 1
-      ;;
+      exit 1
 
-      #-----------------------------------------------------------------
+    #-------------------------------------------------------------------
 
-    esac
+    ;; esac
   fi
 
   if $make_tarball; then
@@ -168,83 +167,70 @@ EOF
     make_tarball=false
   fi
 
-  case $1 in
+  case $1 in *:*)
 
-    *:*)
-
-      # Set remote to be the text before the last colon character.
-      x='\(.*:\)'
-      x=`expr "$1" : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF
+    # Set remote to be the text before the last colon character.
+    x='\(.*:\)'
+    x=`expr "$1" : "$x"` || exit $?
+    x=`sed "$sed_script_2" <<EOF
 $x
 EOF
-      ` || exit $?
-      eval "remote=$x"
+    ` || exit $?
+    eval "remote=$x"
 
-      # Set dst to be the text after the last colon character.
-      x='.*:\(.*\)'
-      x=`expr "$1." : "$x"` || exit $?
-      x=`sed "$sed_script_2" <<EOF
+    # Set dst to be the text after the last colon character.
+    x='.*:\(.*\)'
+    x=`expr "$1." : "$x"` || exit $?
+    x=`sed "$sed_script_2" <<EOF
 $x
 EOF
-      ` || exit $?
-      eval "dst=$x"
+    ` || exit $?
+    eval "dst=$x"
 
-      # Adjust an empty dst to be ".", and a dst that does not begin
-      # with "." or "/" to begin with "./".
-      case $dst in
-        '')
-          dst=.
-        ;;
-        [./]*)
-          :
-        ;;
-        *)
-          dst=./$dst
-        ;;
-      esac
+    # Adjust an empty dst to be ".", and a dst that does not begin
+    # with "." or "/" to begin with "./".
+    case $dst in '')
+      dst=.
+    ;; [./]*)
+      :
+    ;; *)
+      dst=./$dst
+    ;; esac
 
-      # Adjust dst to be a portably quoted shell string.
-      dst=`sed "$sed_script_1" <<EOF
+    # Adjust dst to be a portably quoted shell string.
+    dst=`sed "$sed_script_1" <<EOF
 $dst
 EOF
-      ` || exit $?
+    ` || exit $?
 
-      ssh "$remote" "
-        mkdir -p $dst || exit $?
-        cd $dst || exit $?
-        tar xz || exit $?
-        chmod -R go-rwx .ssh || exit $?
-      " <deploy.tar.gz || exit $?
+    ssh "$remote" "
+      mkdir -p $dst || exit $?
+      cd $dst || exit $?
+      tar xz || exit $?
+      chmod -R go-rwx .ssh || exit $?
+    " <deploy.tar.gz || exit $?
 
-    ;;
+  ;; *)
 
-    *)
+    # Set dst to be the text verbatim.
+    dst=$1
 
-      # Set dst to be the text verbatim.
-      dst=$1
+    # Leave an empty dst alone, and adjust a nonempty dst that does
+    # not begin with "." or "/" to begin with "./".
+    case $dst in '' | [./]*)
+      :
+    ;; *)
+      dst=./$dst
+    ;; esac
 
-      # Leave an empty dst alone, and adjust a nonempty dst that does
-      # not begin with "." or "/" to begin with "./".
-      case $dst in
-        '' | [./]*)
-          :
-        ;;
-        *)
-          dst=./$dst
-        ;;
-      esac
+    (
+      mkdir -p "$dst" || exit $?
+      cd "$dst" || exit $?
+      tar xz || exit $?
+      chmod -R go-rwx .ssh || exit $?
+    ) <deploy.tar.gz || exit $?
 
-      (
-        mkdir -p "$dst" || exit $?
-        cd "$dst" || exit $?
-        tar xz || exit $?
-        chmod -R go-rwx .ssh || exit $?
-      ) <deploy.tar.gz || exit $?
-
-    ;;
-
-  esac
+  ;; esac
 
 done
 
