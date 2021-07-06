@@ -23,12 +23,12 @@ case ${BASH_BOOTSTRAP+x}y$# in
 esac
 unset BASH_BOOTSTRAP
 
+set -E -e -u -o pipefail || exit
+trap exit ERR
+
 declare -r -x LC_ALL=C
 declare -r argv0=jqbc
 declare -r argvS="${argv0//?/ }"
-
-set -E -e -u -o pipefail || exit
-trap exit ERR
 
 jq "$@" | gawk '
   BEGIN {
