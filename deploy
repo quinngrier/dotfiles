@@ -81,6 +81,10 @@ until shift && (exit ${1+1}0); do
   if $parse_options; then
     case $1 in
 
+      #-----------------------------------------------------------------
+      # --help
+      #-----------------------------------------------------------------
+
       --help)
         cat <<'EOF' || exit $?
 Usage: ./deploy [<dir>]...
@@ -105,6 +109,10 @@ EOF
         exit 1
       ;;
 
+      #-----------------------------------------------------------------
+      # Options terminator
+      #-----------------------------------------------------------------
+
       --)
         parse_options=false
         continue
@@ -115,25 +123,42 @@ EOF
         exit 1
       ;;
 
+      #-----------------------------------------------------------------
+      # Unknown options
+      #-----------------------------------------------------------------
+
       -?*)
         awk -v argv0="$0" '
-          BEGIN { printf "%s", argv0 ": unknown option: "; }
+          BEGIN {
+            printf "%s", argv0 ": unknown option: ";
+          }
           {
-            if (NR > 1 || /^--/) {
-              n = sub(/=.*/, "");
-              printf "%s", (NR > 1 ? "\n" : "") $0;
-              if (n) exit 0;
-            } else {
-              printf "%s", substr($0, 1, 2) (/^-$/ ? "\n" : "");
+            if (NR == 1 && !/^--/) {
+              printf "%s", substr($0, 1, 2);
+              if (/^-$/) {
+                printf "%s", "\n";
+              }
+              exit 0;
+            }
+            if (NR > 1) {
+              printf "%s", "\n";
+            }
+            n = sub(/=.*/, "");
+            printf "%s", $0;
+            if (n != 0) {
               exit 0;
             }
           }
-          END { printf "%s", "\n"; }
+          END {
+            printf "%s", "\n";
+          }
         ' <<EOF >&2
 $1
 EOF
         exit 1
       ;;
+
+      #-----------------------------------------------------------------
 
     esac
   fi
@@ -144,7 +169,10 @@ EOF
   fi
 
   case $1 in
+
     *:*)
+
+      # Set remote to be the text before the last colon character.
       x='\(.*:\)'
       x=`expr "$1" : "$x"` || exit $?
       x=`sed "$sed_script_2" <<EOF
@@ -152,6 +180,8 @@ $x
 EOF
       ` || exit $?
       eval "remote=$x"
+
+      # Set dst to be the text after the last colon character.
       x='.*:\(.*\)'
       x=`expr "$1." : "$x"` || exit $?
       x=`sed "$sed_script_2" <<EOF
@@ -159,36 +189,64 @@ $x
 EOF
       ` || exit $?
       eval "dst=$x"
+
+      # Adjust an empty dst to be ".", and a dst that does not begin
+      # with "." or "/" to begin with "./".
       case $dst in
-        '') dst=. ;;
-        [./]*) : ;;
-        *) dst=./$dst ;;
+        '')
+          dst=.
+        ;;
+        [./]*)
+          :
+        ;;
+        *)
+          dst=./$dst
+        ;;
       esac
+
+      # Adjust dst to be a portably quoted shell string.
       dst=`sed "$sed_script_1" <<EOF
 $dst
 EOF
       ` || exit $?
+
       ssh "$remote" "
         mkdir -p $dst || exit $?
         cd $dst || exit $?
         tar xz || exit $?
         chmod -R go-rwx .ssh || exit $?
       " <deploy.tar.gz || exit $?
+
     ;;
+
     *)
+
+      # Set dst to be the text verbatim.
       dst=$1
+
+      # Leave an empty dst alone, and adjust a nonempty dst that does
+      # not begin with "." or "/" to begin with "./".
       case $dst in
-        '') : ;;
-        [./]*) : ;;
-        *) dst=./$dst ;;
+        '')
+          :
+        ;;
+        [./]*)
+          :
+        ;;
+        *)
+          dst=./$dst
+        ;;
       esac
+
       (
         mkdir -p "$dst" || exit $?
         cd "$dst" || exit $?
         tar xz || exit $?
         chmod -R go-rwx .ssh || exit $?
       ) <deploy.tar.gz || exit $?
+
     ;;
+
   esac
 
 done
