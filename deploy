@@ -227,10 +227,7 @@ EOF
       # Leave an empty dst alone, and adjust a nonempty dst that does
       # not begin with "." or "/" to begin with "./".
       case $dst in
-        '')
-          :
-        ;;
-        [./]*)
+        '' | [./]*)
           :
         ;;
         *)
