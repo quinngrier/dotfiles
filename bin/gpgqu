@@ -1,0 +1,155 @@
+#! /bin/sh -
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+# This is a standalone shell script written in portable shell. You can
+# run it with the --help option to learn about what it does and how to
+# use it.
+#
+
+LC_ALL=C
+readonly LC_ALL
+export LC_ALL
+
+gpg2=${GPG2_COMMAND-gpg2}
+readonly gpg2
+
+tmpdir=`mktemp -d` || exit $?
+case $tmpdir in [./]*)
+  :
+;; *)
+  tmpdir=`pwd && echo /`$tmpdir || exit $?
+;; esac
+readonly tmpdir
+
+trap '
+  if command -v shred >/dev/null; then
+    find "$tmpdir" -type f -exec shred "{}" ";"
+  fi
+  rm -f -r "$tmpdir"
+' EXIT
+
+GNUPGHOME=$tmpdir
+readonly GNUPGHOME
+export GNUPGHOME
+
+eval " $gpg2"' --quiet --import -' || exit $?
+
+get_fingerprint='
+  /^fpr:/ {
+    s/^.*:\([0-9A-F]*\):$/\1/
+    p
+    q
+  }
+'
+readonly get_fingerprint
+
+fingerprint=`eval " $gpg2"' --list-keys --with-colons'` || exit $?
+fingerprint=`sed -n "$get_fingerprint" <<EOF
+$fingerprint
+EOF
+` || exit $?
+readonly fingerprint
+
+parse_options=:
+
+case $# in 0)
+  set x
+;; *)
+  set x "$@"
+;; esac
+
+until shift && (exit ${1+1}0); do
+
+  if $parse_options; then
+
+    #-------------------------------------------------------------------
+    # Options terminator
+    #-------------------------------------------------------------------
+
+    case $1 in --)
+
+      parse_options=false
+      continue
+
+    ;; --=*)
+
+      printf '%s\n' "$0: option forbids an argument: --" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # --help
+    #-------------------------------------------------------------------
+
+    ;; --help)
+
+      cat <<'EOF' || exit $?
+Usage: gpgqu [<user_id>]...
+
+Reads a GPG secret key from standard input, adds each <user_id> to it,
+and outputs the resulting public key to standard output.
+EOF
+        exit 0
+
+    ;; --help=*)
+
+      printf '%s\n' "$0: option forbids an argument: --help" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # Unknown options
+    #-------------------------------------------------------------------
+
+    ;; --*)
+
+      awk -v argv0="$0" '
+        BEGIN {
+          printf "%s", argv0 ": unknown option: "
+        }
+        {
+          if (NR > 1) {
+            printf "\n"
+          }
+          n = sub(/=.*/, "")
+          printf "%s", $0
+          if (n > 0) {
+            exit
+          }
+        }
+        END {
+          printf "\n"
+        }
+      ' <<EOF >&2
+$1
+EOF
+      exit 1
+
+    ;; -?*)
+
+      printf '%s: unknown option: %.2s\n' "$0" "$1" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+
+    ;; esac
+  fi
+
+  #---------------------------------------------------------------------
+  # Operands
+  #---------------------------------------------------------------------
+
+  eval " $gpg2"' --quick-add-uid "$fingerprint" "$1"' || exit $?
+
+  #---------------------------------------------------------------------
+
+done
+
+readonly parse_options
+
+eval " $gpg2"' --armor --export' || exit $?

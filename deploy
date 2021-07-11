@@ -34,6 +34,7 @@ files='
   bin/git-ub
   bin/gpgqg
   bin/gpgqg-gpgsec
+  bin/gpgqu
   bin/gpgsec
   bin/jqbc
   bin/s
