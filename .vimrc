@@ -9,10 +9,18 @@
 "
 
 "-----------------------------------------------------------------------
+" The vimrc autocommand group
+"-----------------------------------------------------------------------
+"
+" We use an autocommand group named vimrc to hold our autocommands, and
+" we clear it so that sourcing this vimrc file stays idempotent. If we
+" didn't do this, sourcing this vimrc file multiple times would create
+" duplicate autocommands.
+"
 
 augroup vimrc
   autocmd!
-augroup END
+augroup end
 
 "-----------------------------------------------------------------------
 " Encoding
