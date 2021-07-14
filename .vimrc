@@ -195,11 +195,11 @@ autocmd vimrc BufEnter *
 autocmd vimrc BufEnter *
   \ setlocal formatlistpat=\\v\\c^\\s*
                            \([*-]
-                          \\|\\(?(0
-                               \\|[1-9][0-9]?
-                               \\|[a-z]
-                               \\|x?x?(v?ii?i?\|i?[vx])
-                                \)\\.?\\)?
+                          \\|(0
+                           \\|[1-9][0-9]?
+                           \\|[a-z]
+                           \\|x?x?(v?ii?i?\|i?[vx])
+                            \)\\.
                           \\|todo:
                            \)\\s+
 
