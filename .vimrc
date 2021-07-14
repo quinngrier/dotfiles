@@ -186,6 +186,22 @@ xnoremap <silent> <C-h> :<C-u>:let v:hlsearch = !v:hlsearch<CR>gv
 inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 
 "-----------------------------------------------------------------------
+" Automatic formatting
+"-----------------------------------------------------------------------
+
+autocmd vimrc BufEnter *
+  \ setlocal formatoptions=nq
+
+autocmd vimrc BufEnter *
+  \ setlocal formatlistpat=\\v\\c^\\s*
+                           \([*-]\|\\(?(0
+                             \\|[1-9][0-9]?
+                             \\|[a-z]
+                             \\|x?x?(v?ii?i?\|i?[vx])
+                           \)\\.?\\)?)\\s+
+
+
+"-----------------------------------------------------------------------
 "
 " :<C-u>call and all_lines are used instead of :<C-u>%call because the
 " latter seems to always move the cursor to line 1.
@@ -301,7 +317,6 @@ set termwinscroll=100000
 
 "-----------------------------------------------------------------------
 
-autocmd vimrc BufNewFile,BufRead,VimEnter * setl fo=q
 autocmd vimrc FileType vim set comments=:\\"
 
 "-----------------------------------------------------------------------
