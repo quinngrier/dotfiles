@@ -203,6 +203,22 @@ autocmd vimrc BufEnter *
                           \\|todo:
                            \)\\s+
 
+function Gq(visual)
+  const l:old_expandtab = &expandtab
+  try
+    let &expandtab = 1
+    if a:visual
+      normal! gvgq
+    else
+      normal! gq
+    endif
+  finally
+    let &expandtab = l:old_expandtab
+  endtry
+endfunction
+
+nnoremap <silent> gq :call Gq(0)<CR>
+xnoremap <silent> gq :call Gq(1)<CR>
 
 "-----------------------------------------------------------------------
 "
