@@ -282,7 +282,7 @@ endfunction
 function! Format(all_lines) range
 
   redraw
-  echo "formatting..."
+  echo "Formatting..."
 
   if a:all_lines
     let l:range = ''
@@ -311,7 +311,7 @@ function! Format(all_lines) range
   if l:formatted
     call setpos('.', l:curpos)
     redraw
-    echo "formatting...done"
+    echo "Formatting...done"
     return
   endif
 
@@ -321,7 +321,7 @@ function! Format(all_lines) range
     let l:x = shellescape(@%)
   endif
   redraw
-  echo "formatting...unknown file type: " . l:x
+  echo "Formatting...unknown file type: " . l:x
 
 endfunction
 
