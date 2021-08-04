@@ -213,8 +213,10 @@ autocmd vimrc BufEnter *
                            \)\\s+
 
 function! Gq(visual)
+  const l:old_autoindent = &autoindent
   const l:old_expandtab = &expandtab
   try
+    let &autoindent = 1
     let &expandtab = 1
     if a:visual
       normal! gvgq
@@ -222,6 +224,7 @@ function! Gq(visual)
       normal! gq
     endif
   finally
+    let &autoindent = l:old_autoindent
     let &expandtab = l:old_expandtab
   endtry
 endfunction
