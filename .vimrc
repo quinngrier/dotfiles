@@ -9,6 +9,15 @@
 "
 
 "-----------------------------------------------------------------------
+" General notes
+"-----------------------------------------------------------------------
+"
+" * Functions are defined with "function!" instead of "function" to help
+"   keep this vimrc file idempotent. Without the "!", re-sourcing this
+"   vimrc file would fail to overwrite the existing functions.
+"
+
+"-----------------------------------------------------------------------
 " The vimrc autocommand group
 "-----------------------------------------------------------------------
 "
@@ -203,7 +212,7 @@ autocmd vimrc BufEnter *
                           \\|todo:
                            \)\\s+
 
-function Gq(visual)
+function! Gq(visual)
   const l:old_expandtab = &expandtab
   try
     let &expandtab = 1
