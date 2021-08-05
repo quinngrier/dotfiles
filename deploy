@@ -51,7 +51,7 @@ case $0 in ./deploy)
 ;; *)
   printf '%s\n' "$0: this script must only be run as ./deploy" >&2
   exit 1
-;; esac
+esac
 
 sed_script_1='
   s/'\''/&\\&&/g
@@ -75,7 +75,7 @@ case $# in 0)
   set x
 ;; *)
   set x "$@"
-;; esac
+esac
 
 until shift && (exit ${1+1}0); do
 
@@ -158,7 +158,7 @@ EOF
 
     #-------------------------------------------------------------------
 
-    ;; esac
+    esac
   fi
 
   if $make_tarball; then
@@ -194,7 +194,7 @@ EOF
       :
     ;; *)
       dst=./$dst
-    ;; esac
+    esac
 
     # Adjust dst to be a portably quoted shell string.
     dst=`sed "$sed_script_1" <<EOF
@@ -220,7 +220,7 @@ EOF
       :
     ;; *)
       dst=./$dst
-    ;; esac
+    esac
 
     (
       mkdir -p "$dst" || exit $?
@@ -229,7 +229,7 @@ EOF
       chmod -R go-rwx .ssh || exit $?
     ) <deploy.tar.gz || exit $?
 
-  ;; esac
+  esac
 
 done
 
