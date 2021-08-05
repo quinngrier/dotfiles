@@ -7,6 +7,21 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
+# This script can be used along with its corresponding .cmd script to
+# associate certain file extensions in Windows to be opened with the
+# corresponding program in Cygwin. To set it up:
+#
+#    1. Put this script along with its corresponding .cmd script
+#       into your ~/start directory in Cygwin, creating the
+#       directory if necessary.
+#
+#    2. Right click on a file with a desired extension and go to
+#       "Open with" -> "Choose another app".
+#
+#    3. At the bottom of the app list, select "Look for another
+#       app on this PC" and select the .cmd script. Also select
+#       "Always use this app to open" before clicking "OK".
+#
 
 function pause_and_exit {
   read -p 'Press enter to close this window...'

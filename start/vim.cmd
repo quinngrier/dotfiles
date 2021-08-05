@@ -7,6 +7,9 @@
 @REM named <CC0-1.0.txt>. If not, it may be available at
 @REM <https://creativecommons.org/publicdomain/zero/1.0/>.
 @REM
+@REM See the corresponding .bash script for more information about this
+@REM script.
+@REM
 
 @ECHO OFF
 
