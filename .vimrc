@@ -130,8 +130,6 @@ set fillchars+=stl:\
 set fillchars+=stlnc:\ 
 set fillchars+=vert:▉
 
-set history=10000
-
 set list
 
 set listchars=
@@ -151,8 +149,14 @@ set nojoinspaces
 
 set textwidth=72
 
+"-----------------------------------------------------------------------
+" History
+"-----------------------------------------------------------------------
+
+set history=10000
+
 set viminfo=
-set viminfo+='1000
+set viminfo+='100
 set viminfo+=s1000
 
 "-----------------------------------------------------------------------
