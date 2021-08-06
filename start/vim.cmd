@@ -14,4 +14,4 @@
 @ECHO OFF
 
 START "" "%~dp0..\..\..\bin\mintty.exe" ^
-  /bin/bash -l start/vim.bash "%CD%" %*
+  /bin/bash -l start/%~n0.bash "%CD%" %*
