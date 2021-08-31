@@ -92,7 +92,7 @@ until shift && (exit ${1+1}0); do
 
     ;; --=*)
 
-      printf '%s\n' "$0: option forbids an argument: --" >&2
+      printf '%s\n' "$0: Option forbids an argument: --" >&2
       exit 1
 
     #-------------------------------------------------------------------
@@ -121,7 +121,7 @@ EOF
 
     ;; --help=*)
 
-      printf '%s\n' "$0: option forbids an argument: --help" >&2
+      printf '%s\n' "$0: Option forbids an argument: --help" >&2
       exit 1
 
     #-------------------------------------------------------------------
@@ -130,7 +130,7 @@ EOF
 
     ;; --*)
 
-      printf '%s' "$0: unknown option: " >&2
+      printf '%s' "$0: Unknown option: " >&2
       sed -n '
         /=/ {
           s/=.*//
@@ -145,7 +145,7 @@ EOF
 
     ;; -?*)
 
-      printf '%s: unknown option: %.2s\n' "$0" "$1" >&2
+      printf '%s: Unknown option: %.2s\n' "$0" "$1" >&2
       exit 1
 
     #-------------------------------------------------------------------

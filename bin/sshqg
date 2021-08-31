@@ -40,7 +40,7 @@ case $algo in
   rsa4096) algo_flags='-t rsa -b 4096' ;;
   *)
     cat <<EOF >&2
-sshqg: unknown <algo>: $algo
+sshqg: Unknown <algo>: $algo
 EOF
     exit 1
   ;;

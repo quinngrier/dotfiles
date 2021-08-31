@@ -65,7 +65,7 @@ EOF
         ` || exit $?
         eval option="$option"
         cat <<EOF >&2
-$0: unknown option: $option
+$0: Unknown option: $option
 $0: run "git-u --help" for help
 EOF
         exit 1
@@ -74,7 +74,7 @@ EOF
       -'
 '*)
         cat <<EOF >&2
-$0: unknown option: -
+$0: Unknown option: -
 
 $0: run "git-u --help" for help
 EOF
@@ -87,7 +87,7 @@ $1
 EOF
         ` || exit $?
         cat <<EOF >&2
-$0: unknown option: $option
+$0: Unknown option: $option
 $0: run "git-u --help" for help
 EOF
         exit 1
