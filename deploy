@@ -116,6 +116,7 @@ Examples:
       ./deploy x:  Deploys the dotfiles to your home directory
                    on the remote machine whose ssh address is x.
 EOF
+
         exit 0
 
     ;; --help=*)
@@ -129,23 +130,14 @@ EOF
 
     ;; --*)
 
-      awk -v argv0="$0" '
-        BEGIN {
-          printf "%s", argv0 ": unknown option: "
+      printf '%s' "$0: unknown option: " >&2
+      sed -n '
+        /=/ {
+          s/=.*//
+          p
+          q
         }
-        {
-          if (NR > 1) {
-            printf "\n"
-          }
-          n = sub(/=.*/, "")
-          printf "%s", $0
-          if (n > 0) {
-            exit
-          }
-        }
-        END {
-          printf "\n"
-        }
+        p
       ' <<EOF >&2
 $1
 EOF

@@ -22,17 +22,37 @@ parse_options=:
 unset name
 unset value
 
-case $# in
-  0) set x ;;
-  *) set x "$@" ;;
+case $# in 0)
+  set x
+;; *)
+  set x "$@"
 esac
+
 until shift && (exit ${1+1}0); do
 
   if $parse_options; then
-    case $1 in
 
-      --help)
-        cat <<'EOF' || exit $?
+    #-------------------------------------------------------------------
+    # Options terminator
+    #-------------------------------------------------------------------
+
+    case $1 in --)
+
+      parse_options=false
+      continue
+
+    ;; --=*)
+
+      printf '%s\n' "$0: option forbids an argument: --" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # --help
+    #-------------------------------------------------------------------
+
+    ;; --help)
+
+      cat <<'EOF' || exit $?
 Usage: gpgsec <name> [<value>]
 
 Manages GPG-encrypted secrets in the ~/.gpgsec directory.
@@ -52,43 +72,39 @@ gpg2 must already be installed and a default-key must already be set up
 in the ~/.gnupg/gpg.conf file. The --default-recipient-self option will
 be used when encrypting.
 EOF
-        exit 0
-      ;;
 
-      --help=*)
-        printf '%s\n' "$0: option forbids an argument: --help" >&2
-        exit 1
-      ;;
+      exit 0
 
-      --)
-        parse_options=false
-        continue
-      ;;
+    ;; --help=*)
 
-      --=*)
-        printf '%s\n' "$0: option forbids an argument: --" >&2
-        exit 1
-      ;;
+      printf '%s\n' "$0: option forbids an argument: --help" >&2
+      exit 1
 
-      -?*)
-        awk -v argv0="$0" '
-          BEGIN { printf "%s", argv0 ": unknown option: "; }
-          {
-            if (NR > 1 || /^--/) {
-              n = sub(/=.*/, "");
-              printf "%s", (NR > 1 ? "\n" : "") $0;
-              if (n) exit 0;
-            } else {
-              printf "%s", substr($0, 1, 2) (/^-$/ ? "\n" : "");
-              exit 0;
-            }
-          }
-          END { printf "%s", "\n"; }
-        ' <<EOF >&2
+    #-------------------------------------------------------------------
+    # Unknown options
+    #-------------------------------------------------------------------
+
+    ;; --*)
+
+      printf '%s' "$0: unknown option: " >&2
+      sed -n '
+        /=/ {
+          s/=.*//
+          p
+          q
+        }
+        p
+      ' <<EOF >&2
 $1
 EOF
-        exit 1
-      ;;
+      exit 1
+
+    ;; -?*)
+
+      printf '%s: unknown option: %.2s\n' "$0" "$1" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
 
     esac
   fi

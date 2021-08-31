@@ -95,7 +95,8 @@ Usage: gpgqu [<user_id>]...
 Reads a GPG secret key from standard input, adds each <user_id> to it,
 and outputs the resulting public key to standard output.
 EOF
-        exit 0
+
+      exit 0
 
     ;; --help=*)
 
@@ -108,23 +109,14 @@ EOF
 
     ;; --*)
 
-      awk -v argv0="$0" '
-        BEGIN {
-          printf "%s", argv0 ": unknown option: "
+      printf '%s' "$0: unknown option: " >&2
+      sed -n '
+        /=/ {
+          s/=.*//
+          p
+          q
         }
-        {
-          if (NR > 1) {
-            printf "\n"
-          }
-          n = sub(/=.*/, "")
-          printf "%s", $0
-          if (n > 0) {
-            exit
-          }
-        }
-        END {
-          printf "\n"
-        }
+        p
       ' <<EOF >&2
 $1
 EOF
