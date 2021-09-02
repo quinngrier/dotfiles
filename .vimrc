@@ -156,8 +156,12 @@ set textwidth=72
 set history=10000
 
 set viminfo=
-set viminfo+='100
-set viminfo+=s1000
+set viminfo+='0
+set viminfo+=/0
+set viminfo+=:0
+set viminfo+=@0
+set viminfo+=f0
+set viminfo+=s1
 
 "-----------------------------------------------------------------------
 " Line numbering
