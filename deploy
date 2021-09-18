@@ -20,6 +20,7 @@ files='
   .bashrc
   .gitattributes
   .gitconfig
+  .gitconfig-gitlab
   .inputrc
   .mailmap
   .minttyrc

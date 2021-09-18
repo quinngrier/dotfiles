@@ -8,23 +8,5 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-[advice]
-	detachedHead = false
-
 [alias]
-	ladgo = log --all --decorate --graph --oneline
-	ldgo = log --decorate --graph --oneline
-
-[color]
-	grep = auto
-
-[color "grep"]
-	match = normal magenta
-
-[includeIf "gitdir:gitlab.*/"]
-	path = ~/.gitconfig-gitlab
-[includeIf "gitdir:*.gitlab.*/"]
-	path = ~/.gitconfig-gitlab
-
-[include]
-	path = .gitconfig-private
+	pam = push -o merge_request.create -o merge_request.remove_source_branch -o merge_request.merge_when_pipeline_succeeds
