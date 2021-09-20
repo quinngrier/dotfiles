@@ -112,6 +112,7 @@ alias s='(s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs")'
 
 #-----------------------------------------------------------------------
 
+HISTCONTROL=ignorespace
 HISTFILESIZE=100000
 HISTSIZE=$HISTFILESIZE
 
