@@ -47,7 +47,7 @@ export LC_ALL
 docker=" ${DOCKER:-docker}"
 readonly docker
 
-image=${ADOCK_IMAGE:-asciidoctor/docker-asciidoctor}
+image=${ADOCK_IMAGE:-quinngrier/adock}
 readonly image
 
 [ -t 0 ] && t=-t || t=
