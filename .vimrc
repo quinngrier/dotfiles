@@ -227,10 +227,9 @@ function! Gq(visual)
     let &autoindent = 1
     let &expandtab = 1
     if a:visual
-      normal! gvgq
-    else
-      normal! gq
+      normal! gv
     endif
+    normal! gq
   finally
     let &autoindent = l:old_autoindent
     let &expandtab = l:old_expandtab
@@ -238,7 +237,7 @@ function! Gq(visual)
 endfunction
 
 nnoremap <silent> gq :call Gq(0)<CR>
-xnoremap <silent> gq :call Gq(1)<CR>
+xnoremap <silent> gq <Esc>:call Gq(1)<CR>
 
 "-----------------------------------------------------------------------
 "
