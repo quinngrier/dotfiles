@@ -10,7 +10,7 @@
 #
 # Usage: adock [<arg>]...
 #
-# Runs a quinngrier/adock container with the given arguments. The
+# Runs a quinngrier/adock Docker container with the given arguments. The
 # current working directory will be mounted into and used as the current
 # working directory in the container so that all files below the current
 # working directory are accessible. The container will use the current
@@ -23,28 +23,22 @@
 # You can change the docker command by setting the DOCKER_COMMAND
 # environment variable. The value will be evaluated by the shell.
 #
-# You can change the docker image by setting the ADOCK_IMAGE environment
+# You can change the Docker image by setting the ADOCK_IMAGE environment
 # variable.
 #
-# You can force the newest docker image to be pulled by setting the
+# You can force the newest Docker image to be pulled by setting the
 # ADOCK_PULL environment variable to any nonempty value.
 #
-# Example 1:
-#
-# The following command will compile README.adoc into README.html:
+# Example 1. Compile README.adoc into README.html.
 #
 #       adock README.adoc
 #
-# Example 2:
-#
-# The following command will compile README.adoc into README.pdf:
+# Example 2. Compile README.adoc into README.pdf.
 #
 #       adock -r asciidoctor-pdf -b pdf README.adoc
 #
-# Example 3:
-#
-# The following command will compile README.adoc into README.html,
-# running docker with sudo:
+# Example 3. Compile README.adoc into README.html, running docker with
+# sudo.
 #
 #       DOCKER_COMMAND='sudo docker' adock README.adoc
 #
