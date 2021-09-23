@@ -54,19 +54,24 @@ case $0 in ./deploy)
   exit 1
 esac
 
-sed_script_1='
+# Quotes stdin, less any single trailing newline character. An empty
+# result may be literally empty instead of ''.
+quote_script_1='
   s/'\''/&\\&&/g
   1 s/^/'\''/
   $ s/$/'\''/
 '
-readonly sed_script_1
+readonly quote_script_1
 
-sed_script_2='
+# Quotes stdin, less any single trailing newline character, then less
+# any single trailing non-newline character. An empty result may be
+# literally empty instead of ''.
+quote_script_2='
   s/'\''/&\\&&/g
+  $ s/.\{0,1\}$/'\''/
   1 s/^/'\''/
-  $ s/.$/'\''/
 '
-readonly sed_script_2
+readonly quote_script_2
 
 make_tarball=:
 
@@ -164,7 +169,7 @@ EOF
     # Set remote to be the text before the last colon character.
     x='\(.*:\)'
     x=`expr "$1" : "$x"` || exit $?
-    x=`sed "$sed_script_2" <<EOF
+    x=`sed "$quote_script_2" <<EOF
 $x
 EOF
     ` || exit $?
@@ -173,7 +178,7 @@ EOF
     # Set dst to be the text after the last colon character.
     x='.*:\(.*\)'
     x=`expr "$1." : "$x"` || exit $?
-    x=`sed "$sed_script_2" <<EOF
+    x=`sed "$quote_script_2" <<EOF
 $x
 EOF
     ` || exit $?
@@ -190,7 +195,7 @@ EOF
     esac
 
     # Adjust dst to be a portably quoted shell string.
-    dst=`sed "$sed_script_1" <<EOF
+    dst=`sed "$quote_script_1" <<EOF
 $dst
 EOF
     ` || exit $?
