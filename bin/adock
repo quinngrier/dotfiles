@@ -39,7 +39,7 @@
 #
 # The following command will compile README.adoc into README.pdf:
 #
-#       adock -r asciidoctor-pdf README.adoc
+#       adock -r asciidoctor-pdf -b pdf README.adoc
 #
 # Example 3:
 #
