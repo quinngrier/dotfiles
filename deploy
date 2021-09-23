@@ -29,6 +29,7 @@ files='
   .vimrc
   CC0-1.0.txt
   bin/adock
+  bin/dr
   bin/git-c
   bin/git-d
   bin/git-u

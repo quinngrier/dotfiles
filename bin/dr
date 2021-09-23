@@ -1,0 +1,135 @@
+#! /bin/sh -
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+# This script extends the "docker run" command as follows:
+#
+#    1. The --rm, -i, and -t options are always specified.
+#
+#    2. For every -v option that is specified before any other
+#       command-line arguments, the option argument is adjusted
+#       as follows:
+#
+#          a. If the argument specifies a relative mount
+#             source with no mount destination, the
+#             mount source is adjusted to be absolute
+#             and the mount destination is taken to be
+#             the relative mount source prepended with a
+#             "/" character.
+#
+#          b. If the argument specifies a relative mount
+#             source and any mount destination, the
+#             mount source is adjusted to be absolute
+#             and the mount destination is taken as-is.
+#
+#          c. If the argument specifies an absolute
+#             mount source with no mount destination,
+#             the mount source is taken as-is and the
+#             mount destination is taken to be the mount
+#             source.
+#
+#          d. If the argument specifies an absolute
+#             mount source and any mount destination,
+#             the mount source and the mount destination
+#             are both taken as-is.
+#
+# This script is written in portable shell.
+#
+
+LC_ALL=C
+readonly LC_ALL
+export LC_ALL
+
+docker=${DOCKER_COMMAND:-docker}
+readonly docker
+
+sed=${SED_COMMAND:-sed}
+readonly sed
+
+# Quotes stdin, less any single trailing newline character. An empty
+# result may be literally empty instead of ''.
+quote_script_1='
+  s/'\''/&\\&&/g
+  1 s/^/'\''/
+  $ s/$/'\''/
+'
+readonly quote_script_1
+
+# Quotes stdin, less any single trailing line, then less any single
+# trailing newline character. An empty result may be literally empty
+# instead of ''.
+quote_script_3='
+  s/'\''/&\\&&/g
+  1 s/^/'\''/
+  x
+  1 d
+  $ s/$/'\''/
+'
+readonly quote_script_3
+
+args='run --rm -i -t'
+
+case $# in 0)
+  set x
+;; *)
+  set x "$@"
+esac
+until shift && (exit ${1+1}0); do
+  case ${1?} in -v)
+
+    shift
+    case $# in 0)
+      printf '%s\n' "$0: -v requires an argument." >&2
+      exit 1
+    esac
+    y=${1?}
+
+    case ${y?} in /*)
+      x=
+    ;; *)
+      x=`pwd && echo x` || exit $?
+      x=`eval " ${sed?}"' "${quote_script_3?}"' <<EOF
+${x?}
+EOF
+      ` || exit $?
+      eval "x=${x?}"
+      case ${x?} in /)
+        :
+      ;; *)
+        x=${x?}/
+      esac
+    esac
+
+    case ${y?} in *:*)
+      z=
+    ;; *)
+      case ${x?} in '')
+        z=:${y?}
+      ;; *)
+        z=:/${y?}
+      esac
+    esac
+
+    args="${args?} -v "`eval " ${sed?}"' "${quote_script_1?}"' <<EOF
+${x?}${y?}${z?}
+EOF
+    ` || exit $?
+
+  ;; *)
+    break
+  esac
+done
+
+readonly args
+
+case $# in 0)
+  eval " ${docker?} ${args?}" || exit $?
+;; *)
+  eval " ${docker?} ${args?}"' "$@"' || exit $?
+esac
