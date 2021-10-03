@@ -23,7 +23,7 @@
 #       "Always use this app to open" before clicking "OK".
 #
 
-function pause_and_exit {
+pause_and_exit() {
   read -p 'Press enter to close this window...'
   exit
 }
