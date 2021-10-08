@@ -8,26 +8,56 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
-# Usage: adock [<arg>]...
+# Usage: adock [--serve[=<address>]] [--detach]
+#              [--name=<name>] [--image=<image>] [<arg>]...
+#        adock [--image=<image>] --pull
 #
-# Runs a quinngrier/adock Docker container with the given arguments. The
+# Runs a quinngrier/adock Docker container with the given <arg>s. The
 # current working directory will be mounted into and used as the current
 # working directory in the container so that all files below the current
 # working directory are accessible. The container will use the current
 # user ID and group ID so that any files it outputs will have the
 # appropriate ownership.
 #
-# See <https://github.com/quinngrier/adock> for more information about
-# the quinngrier/adock image.
+# The quinngrier/adock Docker image is essentially a Dockerized version
+# of the asciidoctor command. See <https://github.com/quinngrier/adock>
+# for more information.
 #
-# You can change the docker command by setting the DOCKER_COMMAND
-# environment variable. The value will be evaluated by the shell.
+# If --serve is given, the implied asciidoctor command is assumed to be
+# outputting an HTML document. Instead of yielding the output files, the
+# container will instead collect them into a temporary directory and run
+# an HTTP server to serve them. The container will also detect when any
+# changes have been made and automatically rebuild the document, and it
+# will run a LiveReload server so that a browser viewing the document
+# will automatically refresh when the document is rebuilt.
 #
-# You can change the Docker image by setting the ADOCK_IMAGE environment
-# variable.
+# If <address> is omitted with --serve, the HTTP server will listen on
+# 0.0.0.0:8000 and the LiveReload server will listen on 0.0.0.0:35729.
+# Otherwise, <address> specifies the hosts and ports the servers will
+# listen on. The format is as follows:
 #
-# You can force the newest Docker image to be pulled by setting the
-# ADOCK_PULL environment variable to any nonempty value.
+#       [<http_host>:]<http_port>[,[<live_host>:]<live_port>]
+#
+# The following steps are taken to fill in any missing values:
+#
+#    1. If <http_host> is omitted, it is taken to be 0.0.0.0.
+#    2. If <live_port> is omitted, it is taken to be 35729.
+#    3. If <live_host> is omitted, it is taken to be <http_host>.
+#
+# If --detach is given, the container will run in the background instead
+# of the foreground.
+#
+# If --name is given, the container will be named <name> instead of
+# letting a random name be generated.
+#
+# If --image is given, the <image> Docker image will be used instead of
+# the quinngrier/adock Docker image.
+#
+# If --pull is given, the latest version of the Docker image will be
+# pulled and no further action will be taken.
+#
+# The docker command can be changed by setting the DOCKER environment
+# variable. The value will be evaluated by the shell.
 #
 # Example 1. Compile README.adoc into README.html.
 #
@@ -35,41 +65,186 @@
 #
 # Example 2. Compile README.adoc into README.pdf.
 #
-#       adock -r asciidoctor-pdf -b pdf README.adoc
+#       adock -b pdf -r asciidoctor-pdf README.adoc
 #
 # Example 3. Compile README.adoc into README.html, running docker with
 # sudo.
 #
-#       DOCKER_COMMAND='sudo docker' adock README.adoc
+#       DOCKER='sudo docker' adock README.adoc
+#
+# Example 4. Continuously recompile README.adoc into HTML and serve it
+# through an HTTP server listening on 0.0.0.0:8000.
+#
+#       adock --serve README.adoc
+#
+# Example 5. Pull the latest version of the quinngrier/adock Docker
+# image.
+#
+#       adock --pull
 #
 
 LC_ALL=C
 readonly LC_ALL
 export LC_ALL
 
-docker=${DOCKER_COMMAND:-docker}
+detach=
+unset http_addr
+image=quinngrier/adock
+unset live_addr
+unset name
+pull=false
+
+# TODO: Use gatbps_parse_opt for options parsing.
+
+while :; do
+
+  case ${1-} in --detach)
+    detach=-d
+    shift
+    continue
+  esac
+
+  case ${1-} in --image)
+    case ${2+x} in '')
+      printf '%s\n' "$0: Option requires an argument: $1" >&2
+      exit 1
+    esac
+    image=$1=$2
+    shift 2
+    set x "$image"
+    shift
+    continue
+  esac
+
+  case ${1-} in --image=*)
+    case $1 in *[!-.0-9:=A-Z_a-z]*)
+      printf '%s\n' "$0: Invalid option argument: $1" >&2
+      exit 1
+    esac
+    r='[^=]*=\(.*\)'
+    image=`expr "x$1" : "x$r"` || exit $?
+    shift
+    continue
+  esac
+
+  case ${1-} in --name)
+    case ${2+x} in '')
+      printf '%s\n' "$0: Option requires an argument: $1" >&2
+      exit 1
+    esac
+    name=$1=$2
+    shift 2
+    set x "$name"
+    shift
+    continue
+  esac
+
+  case ${1-} in --name=*)
+    case $1 in *[!-.0-9=A-Z_a-z]*)
+      printf '%s\n' "$0: Invalid option argument: $1" >&2
+      exit 1
+    esac
+    r='[^=]*=\(.*\)'
+    name=`expr "x$1" : "x$r"` || exit $?
+    shift
+    continue
+  esac
+
+  case ${1-} in --pull)
+    pull=:
+    shift
+    continue
+  esac
+
+  case ${1-} in --serve)
+    http_addr=0.0.0.0:8000
+    live_addr=0.0.0.0:35729
+    shift
+    continue
+  esac
+
+  case ${1-} in --serve=*)
+    case $1 in *[!-,.0-9:=A-Z_a-z]*)
+      printf '%s\n' "$0: Invalid option argument: $1" >&2
+      exit 1
+    esac
+    r='[^=]*=\(.*\)'
+    http_addr=`expr "x$1" : "x$r"` || exit $?
+    case $http_addr in *,*)
+      r='.*,\(.*\)'
+      live_addr=`expr "x$http_addr" : "x$r"` || exit $?
+      r='\(.*\),.*'
+      http_addr=`expr "x$http_addr" : "x$r"` || exit $?
+    ;; *)
+      live_addr=35729
+    esac
+    case $http_addr in *:*)
+      :
+    ;; *)
+      http_addr=0.0.0.0:$http_addr
+    esac
+    case $live_addr in *:*)
+      :
+    ;; *)
+      r='\(.*\):.*'
+      live_addr=`expr "x$http_addr" : "x$r"`:$live_addr || exit $?
+    esac
+    shift
+    continue
+  esac
+
+  break
+
+done
+
+readonly detach
+readonly http_addr
+readonly image
+readonly live_addr
+readonly name
+readonly pull
+
+docker=${DOCKER:-docker}
 readonly docker
 
-image=${ADOCK_IMAGE:-quinngrier/adock}
-readonly image
-
-[ -t 0 ] && t=-t || t=
-u=`id -u` || exit $?
-g=`id -g` || exit $?
-pwd=`pwd` || exit $?
-
-if ${ADOCK_PULL:+:} false; then
+if $pull; then
   eval " $docker"' pull "$image"' || exit $?
+  exit
 fi
 
-args='run --rm -i $t -u $u:$g -v "$pwd":/x -w /x "$image"'
-case $# in
-  0)
-    eval " $docker $args"
-    exit $?
-  ;;
-  *)
-    eval " $docker $args"' "$@"'
-    exit $?
-  ;;
+test -t 0 && s=0 || s=$?
+case $s in 0)
+  t=-t
+;; 1)
+  t=
+;; *)
+  exit $s
+esac
+readonly t
+
+u=`id -u` || exit $?
+readonly u
+
+g=`id -g` || exit $?
+readonly g
+
+pwd=`pwd` || exit $?
+readonly pwd
+
+args='run --rm -i $t $detach -u $u:$g -v "$pwd":/x -w /x'
+case ${http_addr+x} in ?*)
+  args=$args' -p "$http_addr:80" -p "$live_addr:35729"'
+esac
+case ${name+x} in ?*)
+  args=$args' --name "$name"'
+esac
+args=$args' "$image"'
+case ${http_addr+x} in ?*)
+  args=$args' --serve "$http_addr" "$live_addr"'
+esac
+
+case $# in 0)
+  eval " $docker $args" || exit $?
+;; *)
+  eval " $docker $args"' "$@"' || exit $?
 esac
