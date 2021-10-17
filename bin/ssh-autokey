@@ -23,7 +23,7 @@ command -v gpgsec >/dev/null || s=$?
 case ${s?} in 0)
   :
 ;; 1)
-  exec nc -q 0 ${host?} ${port?}
+  exec nc ${host?} ${port?}
 ;; *)
   exit ${s?}
 esac
@@ -33,7 +33,7 @@ command -v ssh-add >/dev/null || s=$?
 case ${s?} in 0)
   :
 ;; 1)
-  exec nc -q 0 ${host?} ${port?}
+  exec nc ${host?} ${port?}
 ;; *)
   exit ${s?}
 esac
@@ -46,7 +46,7 @@ test -f ~/.gpgsec/${secret_key_name?}.gpg || s=$?
 case ${s?} in 0)
   :
 ;; 1)
-  exec nc -q 0 ${host?} ${port?}
+  exec nc ${host?} ${port?}
 ;; *)
   exit ${s?}
 esac
@@ -58,4 +58,4 @@ ssh-add -t 10 -q - <<EOF || :
 ${secret_key?}
 EOF
 
-exec nc -q 0 ${host?} ${port?}
+exec nc ${host?} ${port?}
