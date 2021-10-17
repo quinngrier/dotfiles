@@ -19,7 +19,7 @@ user=${3:?}
 readonly user
 
 s=0
-command -v gpgsec >/dev/null || s=$?
+command -v ssh-add >/dev/null || s=$?
 case ${s?} in 0)
   :
 ;; 1)
@@ -29,7 +29,7 @@ case ${s?} in 0)
 esac
 
 s=0
-command -v ssh-add >/dev/null || s=$?
+command -v gpgsec >/dev/null || s=$?
 case ${s?} in 0)
   :
 ;; 1)
