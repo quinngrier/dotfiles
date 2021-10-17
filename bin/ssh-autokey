@@ -9,53 +9,101 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-host=${1:?}
+real_host=${1?}
+readonly real_host
+shift
+
+host=${1?}
 readonly host
+shift
 
-port=${2:?}
+port=${1?}
 readonly port
+shift
 
-user=${3:?}
+user=${1?}
 readonly user
+shift
 
-s=0
-command -v ssh-add >/dev/null || s=$?
-case ${s?} in 0)
-  :
-;; 1)
-  exec nc ${host?} ${port?}
-;; *)
-  exit ${s?}
+unset key
+case ${1+x} in ?*)
+  key=${1?}
+  shift
 esac
+readonly key
 
-s=0
-command -v gpgsec >/dev/null || s=$?
-case ${s?} in 0)
-  :
-;; 1)
-  exec nc ${host?} ${port?}
-;; *)
-  exit ${s?}
-esac
+unset key_content
 
-secret_key_name=${4-ssh/${host?}/${user?}}
-readonly secret_key_name
-
-s=0
-test -f ~/.gpgsec/${secret_key_name?}.gpg || s=$?
-case ${s?} in 0)
-  :
-;; 1)
-  exec nc ${host?} ${port?}
-;; *)
-  exit ${s?}
-esac
-
-secret_key=`gpgsec -- "${secret_key_name?}"` || exit $?
-readonly secret_key
-
-ssh-add -t 10 -q - <<EOF || :
-${secret_key?}
+finish() {
+  case ${key_content+x} in ?*)
+    ssh-add -t 10 -q - <<EOF || :
+${key_content?}
 EOF
+  esac
+  exec nc "${real_host?}" "${port?}" || exit $?
+}
 
-exec nc ${host?} ${port?}
+check_for_file() {
+  eval ${2?}=:
+  test -f "${1?}" || {
+    check_for_file_status=$?
+    case ${check_for_file_status?} in 1)
+      eval ${2?}=false
+    ;; *)
+      exit ${check_for_file_status?}
+    esac
+  }
+  readonly ${2?}
+}
+
+check_for_program() {
+  eval ${2?}=:
+  command -v "${1?}" >/dev/null || {
+    check_for_program_status=$?
+    case ${check_for_program_status?} in 1)
+      eval ${2?}=false
+    ;; *)
+      exit ${check_for_program_status?}
+    esac
+  }
+  readonly ${2?}
+}
+
+#-----------------------------------------------------------------------
+#
+# If we don't have ssh-add, there's nothing we can do.
+#
+
+check_for_program ssh-add have_ssh_add
+
+if ${have_ssh_add?}; then
+  :
+else
+  finish
+fi
+
+#-----------------------------------------------------------------------
+# gpgsec
+#-----------------------------------------------------------------------
+
+check_for_program gpgsec have_gpgsec
+
+if ${have_gpgsec?}; then
+
+  gpgsec_entry=${key-"ssh/${host?}/${user?}"}
+  readonly gpgsec_entry
+
+  # TODO: gpgsec should have an option to check for entry existence.
+  check_for_file ~/.gpgsec/"${gpgsec_entry?}".gpg have_gpgsec_entry
+
+  if ${have_gpgsec_entry?}; then
+    key_content=`gpgsec -- "${gpgsec_entry?}"` || exit $?
+    readonly key_content
+    finish
+  fi
+
+fi
+
+#-----------------------------------------------------------------------
+
+finish
