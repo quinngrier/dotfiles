@@ -40,6 +40,8 @@ files='
   bin/gpgsec
   bin/jqbc
   bin/s
+  bin/ssh
+  bin/ssh-autokey
   bin/sshqg
   bin/sshqg-gpgsec
   deploy
