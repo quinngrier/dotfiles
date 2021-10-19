@@ -90,7 +90,7 @@ check_for_program gpgsec have_gpgsec
 
 if ${have_gpgsec?}; then
 
-  gpgsec_entry=${key-"ssh/${host?}/${user?}"}
+  gpgsec_entry=${key-"ssh-autokey/${host?}/${user?}"}
   readonly gpgsec_entry
 
   # TODO: gpgsec should have an option to check for entry existence.
