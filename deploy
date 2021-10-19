@@ -42,6 +42,7 @@ files='
   bin/s
   bin/ssh
   bin/ssh-autokey
+  bin/ssh-keygen-yf
   bin/sshqg
   bin/sshqg-gpgsec
   deploy
