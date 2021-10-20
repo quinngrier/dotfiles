@@ -64,22 +64,18 @@ shopt -u \
 ;
 
 #-----------------------------------------------------------------------
-# The e alias
+# Error handling
 #-----------------------------------------------------------------------
 #
-# The e alias can be used to enable error handling when writing ad-hoc
-# subshell scripts. For example:
+# The e alias enables error handling. For example:
 #
 #       (e; xs=$(git grep -l foo); sed -i 's/foo/bar/g' $xs)
 #
-# Do not use the e alias outside of a subshell! Doing so will enable
-# error handling for all commands you type, which is probably not what
-# you want, as this will make your shell exit upon any command failing.
-# If you do it by accident, you can use the ee alias to undo it.
+# Do not use the e alias outside of a subshell! Doing so may interfere
+# with your environment.
 #
 
-alias e='{ set -E -e -u -o pipefail || exit; trap exit ERR; }'
-alias ee='{ set +E +e +u +o pipefail; trap - ERR; }'
+alias e='{ set -E -e -u -o pipefail || exit $?; trap exit ERR; }'
 
 #-----------------------------------------------------------------------
 # The grep alias
