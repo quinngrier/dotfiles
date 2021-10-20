@@ -78,6 +78,51 @@ shopt -u \
 alias e='{ set -E -e -u -o pipefail || exit $?; trap exit ERR; }'
 
 #-----------------------------------------------------------------------
+# Nested SSH
+#-----------------------------------------------------------------------
+#
+# The nested_ssh alias enables error handling and defines variables for
+# making nested calls to ssh. For example:
+#
+#       (
+#         nested_ssh
+#         ssh foo bash -l -c "$begin1"'
+#           echo Hello from foo.
+#           ssh bar bash -l -c '"$begin2"'
+#             echo Hello from bar.
+#             ssh baz bash -l -c '"$begin3"'
+#               echo Hello from baz.
+#             '"$end3"'
+#           '"$end2"'
+#         '"$end1"
+#       )
+#
+# Inside each block, all code can be written normally except for single
+# quote characters, which must always be written like '"$q1"'. The index
+# in the variable names should always be incremented and decremented to
+# match the nesting depth. Note that the syntax for begin1 and end1 is
+# slightly different for i = 1 than i > 1.
+#
+# Do not use the nested_ssh alias outside of a subshell! Doing so may
+# interfere with your environment.
+#
+
+alias nested_ssh='{
+  eh=${eh-'\''set -E -e -u -o pipefail || exit $?; trap exit ERR;'\''}
+  eval " $eh"
+  q0=\'\''
+  begin1=$q0$eh; end1=$q0; q1=$q0\\$q0$q0
+  begin2=\\$q1$q1$eh; end2=$q1\\$q1; q2=$q1\\$q1\\\\\\$q1\\$q1$q1
+  begin3=\\$q2$q2$eh; end3=$q2\\$q2; q3=$q2\\$q2\\\\\\$q2\\$q2$q2
+  begin4=\\$q3$q3$eh; end4=$q3\\$q3; q4=$q3\\$q3\\\\\\$q3\\$q3$q3
+  begin5=\\$q4$q4$eh; end5=$q4\\$q4; q5=$q4\\$q4\\\\\\$q4\\$q4$q4
+  begin6=\\$q5$q5$eh; end6=$q5\\$q5; q6=$q5\\$q5\\\\\\$q5\\$q5$q5
+  begin7=\\$q6$q6$eh; end7=$q6\\$q6; q7=$q6\\$q6\\\\\\$q6\\$q6$q6
+  begin8=\\$q7$q7$eh; end8=$q7\\$q7; q8=$q7\\$q7\\\\\\$q7\\$q7$q7
+  begin9=\\$q8$q8$eh; end9=$q8\\$q8; q9=$q8\\$q8\\\\\\$q8\\$q8$q8
+}'
+
+#-----------------------------------------------------------------------
 # The grep alias
 #-----------------------------------------------------------------------
 
