@@ -9,21 +9,28 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+#-----------------------------------------------------------------------
+
 remove_home_bin='
-  s|:'${HOME?}'/bin||g
-  s|^'${HOME?}'/bin:||
-  s|^'${HOME?}'/bin$||
+  s|:'$HOME'/bin||g
+  s|^'$HOME'/bin:||
+  s|^'$HOME'/bin$||
 '
 readonly remove_home_bin
 
-PATH2=`LC_ALL=C sed "${remove_home_bin?}" <<EOF
-${PATH?}
+PATH_WITHOUT_HOME_BIN=`
+  LC_ALL=C eval " ${SED:-sed}"' "$remove_home_bin"' <<EOF
+$PATH
 EOF
 ` || exit $?
-readonly PATH2
+readonly PATH_WITHOUT_HOME_BIN
 
-ssh=`PATH=${PATH2?} command -v ssh` || exit $?
+ssh=`
+  PATH=$PATH_WITHOUT_HOME_BIN command -v ssh
+` || exit $?
 readonly ssh
+
+#-----------------------------------------------------------------------
 
 s=0
 command -v ssh-agent >/dev/null || s=$?

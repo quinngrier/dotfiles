@@ -8,10 +8,20 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
-
-LC_ALL=C
-readonly LC_ALL
-export LC_ALL
+# This script wraps ssh-keygen with the following modifications:
+#
+#    1. The -f option is modified to always accept "-" to mean
+#       standard input. If "-f -" is used in a context where a
+#       normal file would be updated in-place, the update is
+#       discarded (except if the new --f option is also given).
+#       If -f is bundled after other short options, such as in
+#       "ssh-keygen -yf -", it is not handled.
+#
+#    2. A new option, --f, may be given. If it is given without
+#       the -f option, it has no effect. Otherwise, the normal
+#       standard output is discarded and the content of the -f
+#       file is output instead (after any in-place update).
+#
 
 # :r !subset.sh gatbps_barf gatbps_parse_opt gatbps_unknown_opt
 
@@ -309,97 +319,126 @@ gatbps_unknown_opt_eof
 
 #-----------------------------------------------------------------------
 
-unset file
+remove_home_bin='
+  s|:'$HOME'/bin||g
+  s|^'$HOME'/bin:||
+  s|^'$HOME'/bin$||
+'
+readonly remove_home_bin
+
+PATH_WITHOUT_HOME_BIN=`
+  LC_ALL=C eval " ${SED:-sed}"' "$remove_home_bin"' <<EOF
+$PATH
+EOF
+` || exit $?
+readonly PATH_WITHOUT_HOME_BIN
+
+ssh_keygen=`
+  PATH=$PATH_WITHOUT_HOME_BIN command -v ssh-keygen
+` || exit $?
+readonly ssh_keygen
+
+#-----------------------------------------------------------------------
+
+unset f
+output_f=false
 
 case $# in 0)
   set x
 ;; *)
   set x "$@"
 esac
+n=$#
 parse_options=:
-until shift && (exit ${1+1}0); do
+while :; do
+  shift
+  case $n in 1)
+    break
+  esac
 
-  if ${parse_options?}; then
-
-    #-------------------------------------------------------------------
-    # Options terminator
-    #-------------------------------------------------------------------
+  if $parse_options; then
 
     gatbps_parse_opt -- forbidden : "$@"
-    eval "${pop?}"
-    if ${got?}; then
+    if $got; then
+      eval "$pop"
+      set x "$@" --
+      shift
       parse_options=false
+      n=`expr $n - 1` || exit $?
       continue
     fi
 
-    #-------------------------------------------------------------------
-    # --help
-    #-------------------------------------------------------------------
-
-    gatbps_parse_opt --help forbidden : "$@"
-    eval "${pop?}"
-    if ${got?}; then
-      cat <<EOF || exit $?
-Usage: $0 [<file>]
-
-Reads an SSH secret key and outputs its corresponding public key. If
-<file> is omitted or "-", the secret key is read from standard input.
-Otherwise, the secret key is read from <file>.
-EOF
-      exit 0
+    gatbps_parse_opt -f required : "$@"
+    if $got; then
+      k=$#
+      eval "$pop"
+      f=$arg
+      n=`expr $n - '(' $k - $# ')'` || exit $?
+      continue
     fi
 
-    #-------------------------------------------------------------------
-    # Unknown options
-    #-------------------------------------------------------------------
-
-    gatbps_unknown_opt "${1?}"
-
-    #-------------------------------------------------------------------
+    gatbps_parse_opt --f forbidden : "$@"
+    if $got; then
+      eval "$pop"
+      output_f=:
+      n=`expr $n - 1` || exit $?
+      continue
+    fi
 
   fi
 
-  if ${file+:} false; then
-    gatbps_barf "Too many operands."
-  fi
-
-  file=${1?}
+  set x "$@" "$1"
+  shift
+  n=`expr $n - 1` || exit $?
 
 done
-readonly parse_options
 
-file=${file--}
-case ${file?} in '' | /* | ./* | -)
-  :
-;; *)
-  file=./${file?}
-esac
-readonly file
+readonly output_f
 
-case ${file?} in -)
+case ${f+x} in x)
 
-  file2=`mktemp` || exit $?
-  case ${file2?} in '' | /* | ./*)
+  case $f in -)
+    f=`mktemp` || exit $?
+    case $f in '' | /* | ./*)
+      :
+    ;; *)
+      f=./$f
+    esac
+    trap '
+      if command -v shred >/dev/null 2>&1; then
+        shred "$f" || :
+      fi
+      rm "$f" || :
+    ' EXIT
+    cat >"$f" || exit $?
+  ;; '' | /* | ./*)
     :
   ;; *)
-    file2=./${file2?}
+    f=./$f
   esac
-  readonly file2
+  readonly f
 
-  trap '
-    if command -v shred >/dev/null 2>&1; then
-      shred "${file2?}" || :
-    fi
-    rm "${file2?}" || :
-  ' EXIT
-
-  cat >"${file2?}" || exit $?
+  if $output_f; then
+    case $# in 0)
+      "$ssh_keygen" -f "$f" >/dev/null || exit $?
+    ;; *)
+      "$ssh_keygen" -f "$f" "$@" >/dev/null || exit $?
+    esac
+    cat "$f" || exit $?
+  else
+    case $# in 0)
+      "$ssh_keygen" -f "$f" || exit $?
+    ;; *)
+      "$ssh_keygen" -f "$f" "$@" || exit $?
+    esac
+  fi
 
 ;; *)
 
-  file2=${file?}
-  readonly file2
+  case $# in 0)
+    "$ssh_keygen" || exit $?
+  ;; *)
+    "$ssh_keygen" "$@" || exit $?
+  esac
 
 esac
-
-ssh-keygen -y -f "${file2?}" || exit $?
