@@ -373,7 +373,7 @@ while :; do
       k=$#
       eval "$pop"
       f=$arg
-      n=`expr $n - '(' $k - $# ')'` || exit $?
+      n=`expr $n - 1 - '(' $k - $# ')'` || exit $?
       continue
     fi
 
