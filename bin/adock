@@ -311,9 +311,10 @@ gatbps_unknown_opt_eof
 
 detach=
 unset http_addr
-image=quinngrier/adock
+image=docker.io/quinngrier/adock
 unset live_addr
-name=adock
+unset name
+unset serve
 update=false
 
 case $# in 0)
@@ -391,13 +392,10 @@ until shift && (exit ${1+1}0); do
   # -n, --name
   #---------------------------------------------------------------------
 
-  gatbps_parse_opt -n --name required : "$@"
+  gatbps_parse_opt -n --name permitted : "$@"
   if ${got?}; then
     eval "${pop?}"
-    name=${arg?}
-    case ${name?} in '')
-      unset name
-    esac
+    name=${arg-}
     continue
   fi
 
@@ -408,6 +406,7 @@ until shift && (exit ${1+1}0); do
   gatbps_parse_opt -s --serve forbidden : "$@"
   if ${got?}; then
     eval "${pop?}"
+    serve=
     case ${http_addr+x} in '')
       http_addr=0.0.0.0:8000
       live_addr=0.0.0.0:35729
@@ -437,6 +436,7 @@ readonly http_addr
 readonly image
 readonly live_addr
 readonly name
+readonly serve
 readonly update
 
 #-----------------------------------------------------------------------
@@ -449,6 +449,8 @@ readonly update
 # instead of a directory would also work, but using a directory makes it
 # easier to get an absolute path.
 #
+
+# TODO: Use gatbps_csf for perfect output collection.
 
 tmp_dir=`mktemp -d` || exit $?
 case ${tmp_dir?} in /*)
@@ -466,11 +468,19 @@ exit_trap='
 '
 readonly exit_trap
 
-trap "${exit_trap?}" EXIT
+trap "${exit_trap?}" EXIT || exit $?
 
 #-----------------------------------------------------------------------
 
-docker=${DOCKER:-docker}
+case ${DOCKER-} in '')
+  if command -v docker >/dev/null 2>&1; then
+    docker=docker
+  elif command -v podman >/dev/null 2>&1; then
+    docker=podman
+  else
+    docker=docker
+  fi
+esac
 readonly docker
 
 if ${update?}; then
@@ -522,7 +532,7 @@ if ${update?}; then
 
     mv -f -- "${tmp_dir?}"/adock "${argv0?}"
 
-  '
+  ' || exit $?
 
 fi
 
@@ -541,23 +551,36 @@ readonly t
 pwd=`pwd` || exit $?
 readonly pwd
 
-args='run --rm -i $t $detach -v "$pwd:$pwd" -w "$pwd"'
+args=
+
+args=${args?}" ${DOCKER_FLAGS-}"
+
+args=${args?}' run --rm -i $t $detach -v "$pwd:$pwd" -w "$pwd"'
 
 args=${args?}' -v "${tmp_dir?}":/tmp_dir'
 
 args=${args?}' -e ADOCK_UMASK='`umask` || exit $?
 
-case ${http_addr+x} in ?*)
+case ${serve+x} in ?*)
   args=${args?}' -p "${http_addr?}:80" -p "${live_addr?}:35729"'
+  case ${name+x} in ?*)
+    case ${name?} in ?*)
+      args=${args?}' --name "${name?}"'
+    esac
+  ;; *)
+    args=${args?}' --name adock'
+  esac
+;; *)
+  case ${name-} in ?*)
+    args=${args?}' --name "${name?}"'
+  esac
 esac
 
-case ${name+x} in ?*)
-  args=${args?}' --name "${name?}"'
-esac
+args=${args?}" ${DOCKER_RUN_FLAGS-}"
 
 args=${args?}' "${image?}"'
 
-case ${http_addr+x} in ?*)
+case ${serve+x} in ?*)
   args=${args?}' --serve "${http_addr?}" "${live_addr?}"'
 esac
 
