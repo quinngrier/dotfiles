@@ -16,17 +16,23 @@ export LC_ALL
 case $#,$1 in
   1,--help)
     cat <<'EOF' || exit $?
-Usage: sshqg <file> <comment> [<passphrase> [<algo=rsa4096>]]
+Usage: sshqg <file> [<comment> [<passphrase> [<algo>]]]
 
-Generate an SSH keypair <file> and <file>.pub with comment <comment>.
+Generates an SSH keypair <file> and <file>.pub.
+
+Omitting <comment> or setting it to the empty string will generate a key
+with an empty comment.
+
 Omitting <passphrase> or setting it to the empty string will generate a
 key with no passphrase. Setting <passphrase> to "-" will cause it to be
-read from standard input. The following values are supported for <algo>:
-rsa4096.
+read from standard input.
+
+The following values are supported for <algo>: rsa4096. Omitting <algo>
+is equivalent to specifying rsa4096.
 EOF
     exit 0
   ;;
-  [2-4],*)
+  [1-4],*)
     :
   ;;
   *)
@@ -41,10 +47,10 @@ file=$1
 case $file in /*) : ;; *) file=./$file ;; esac
 readonly file
 
-comment=$2
+comment=${2-}
 readonly comment
 
-passphrase=$3
+passphrase=${3-}
 
 algo=${4-rsa4096}
 readonly algo

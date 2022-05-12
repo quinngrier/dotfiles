@@ -3,12 +3,12 @@
 case $#,$1 in
   1,--help)
     cat <<'EOF' || exit $?
-Usage: sshqg-gpgsec <name> <comment> [<arg>...]
+Usage: sshqg-gpgsec <name> [<arg>...]
 
-Generate an SSH keypair with the sshqg utility and store it with the
+Generates an SSH keypair with the sshqg utility and stores it with the
 gpgsec utility as two secrets <name> and <name>.pub. The sshqg utility
-will be invoked as "sshqg <file> <comment> [<arg>...]", where <file> is
-a temporary file that will be deleted at program exit.
+will be invoked as "sshqg <file> [<arg>...]", where <file> is a
+temporary file that will be deleted at program exit.
 
 The sshqg and gpgsec utilities are available at
 <https://gitlab.com/quinngrier/dotfiles/-/blob/master/bin/sshqg> and
@@ -16,7 +16,7 @@ The sshqg and gpgsec utilities are available at
 EOF
     exit 0
   ;;
-  [0-1],*)
+  0,*)
     cat <<'EOF' >&2
 sshqg-gpgsec: bad usage, try "sshqg-gpgsec --help"
 EOF
