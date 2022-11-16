@@ -173,12 +173,25 @@ HISTSIZE=$HISTFILESIZE
 #
 #       user@host:/current/working/directory
 #
+# Note that we cannot use Bash's prompting escapes inside PS1_function,
+# as they are only interpreted directly inside the prompting variables.
+# We use the following alternatives instead:
+#
+#       \[ is \001
+#       \] is \002
+#       \a is \007
+#       \e is \033
+#       \u is $USER
+#       \H is $HOSTNAME
+#
 
 PS1_function() {
 
   declare -r e=$'\001\033'
   declare -r m=$'m\002'
   declare -r a=$'\007\002'
+  declare -r u="$USER"
+  declare -r H="$HOSTNAME"
   declare -r f='                                                  '
   declare s=
   declare n=$COLUMNS
@@ -187,7 +200,7 @@ PS1_function() {
 
   s+="$e[0$m"
 
-  s+="$e]0;$USER@$HOSTNAME:$PWD$a"
+  s+="$e]0;$u@$H:$PWD$a"
 
   s+="$e[4$m"
 
@@ -201,7 +214,7 @@ PS1_function() {
   s+="]"
   n=$((n - 1))
 
-  x="[$USER@$HOSTNAME:$PWD]"
+  x="[$u@$H:$PWD]"
   s+="$x"
   n=$((n - ${#x}))
 
