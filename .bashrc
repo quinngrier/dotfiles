@@ -174,7 +174,7 @@ HISTSIZE=$HISTFILESIZE
 #       user@host:/current/working/directory
 #
 
-function print_ps1 {
+print_ps1() {
   local -r e=$'\001\033'
   local -r m=$'m\002'
   local -r a=$'\007\002'
