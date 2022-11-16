@@ -175,13 +175,14 @@ HISTSIZE=$HISTFILESIZE
 #
 
 print_ps1() {
-  local -r e=$'\001\033'
-  local -r m=$'m\002'
-  local -r a=$'\007\002'
-  local s=
-  local n=$COLUMNS
-  local p=
-  local x
+
+  declare -r e=$'\001\033'
+  declare -r m=$'m\002'
+  declare -r a=$'\007\002'
+  declare s=
+  declare n=$COLUMNS
+  declare p=
+  declare x
 
   s+="$e[0$m"
 
@@ -209,6 +210,7 @@ print_ps1() {
   s+="$e[0$m"$'\n$ '
 
   printf '%s' "$s"
+
 }
 
 PS1='$(print_ps1 "${PIPESTATUS[@]}")'
