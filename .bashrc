@@ -191,13 +191,14 @@ print_ps1() {
   s+="$e[4$m"
 
   s+="["
+  n=$((n - 1))
   for x; do
     s+="$p$e[$((x == 0 ? 32 : 31))$m$x$e[39$m"
     n=$((n - ${#p} - ${#x}))
     p='|'
   done
   s+="]"
-  n=$((n - 2))
+  n=$((n - 1))
 
   x="[$USER@$HOSTNAME:$PWD]"
   s+="$x"
