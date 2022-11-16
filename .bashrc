@@ -214,7 +214,9 @@ print_ps1() {
     n=0
   fi
 
-  s+="$e[0$m"$'\n$ '
+  s+="$e[0$m"
+
+  s+=$'\n$ '
 
   printf '%s' "$s"
 
