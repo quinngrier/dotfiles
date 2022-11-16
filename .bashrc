@@ -174,7 +174,7 @@ HISTSIZE=$HISTFILESIZE
 #       user@host:/current/working/directory
 #
 
-print_ps1() {
+PS1_function() {
 
   declare -r e=$'\001\033'
   declare -r m=$'m\002'
@@ -222,7 +222,7 @@ print_ps1() {
 
 }
 
-PS1='$(print_ps1 "${PIPESTATUS[@]}")'
+PS1='$(PS1_function "${PIPESTATUS[@]}")'
 
 #-----------------------------------------------------------------------
 # gpg-agent and ssh-agent
