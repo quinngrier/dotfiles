@@ -179,6 +179,7 @@ print_ps1() {
   declare -r e=$'\001\033'
   declare -r m=$'m\002'
   declare -r a=$'\007\002'
+  declare -r f='                                                  '
   declare s=
   declare n=$COLUMNS
   declare p=
@@ -204,8 +205,13 @@ print_ps1() {
   s+="$x"
   n=$((n - ${#x}))
 
+  while ((n > ${#f})); do
+    s+="$f"
+    n=$((n - ${#f}))
+  done
   if ((n > 0)); then
-    s+=$(printf "%${n}s")
+    s+="${f:0:n}"
+    n=0
   fi
 
   s+="$e[0$m"$'\n$ '
