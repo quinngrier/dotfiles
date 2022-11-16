@@ -173,6 +173,11 @@ HISTSIZE=$HISTFILESIZE
 #
 #       user@host:/current/working/directory
 #
+# The user's home directory will never be abbreviated to "~" in the
+# current working directory display. For example, my window title and
+# prompt currently say "/home/quinn", not "~". This makes the display
+# more robust for copy-pasting into other contexts.
+#
 # Note that we cannot use Bash's prompting escapes inside PS1_function,
 # as they are only interpreted directly inside the prompting variables.
 # We use the following alternatives instead:
