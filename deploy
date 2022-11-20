@@ -38,6 +38,7 @@ files='
   bin/gpgqg-gpgsec
   bin/gpgqu
   bin/gpgsec
+  bin/gpgsec-aws
   bin/jqbc
   bin/s
   bin/ssh
