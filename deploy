@@ -46,6 +46,7 @@ files='
   bin/ssh-keygen
   bin/sshqg
   bin/sshqg-gpgsec
+  bin/tts
   deploy
   start/vim.bash
   start/vim.cmd
