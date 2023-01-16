@@ -20,7 +20,6 @@ files='
   .bashrc
   .gitattributes
   .gitconfig
-  .gitconfig-gitlab
   .inputrc
   .mailmap
   .minttyrc
@@ -48,6 +47,7 @@ files='
   bin/sshqg-gpgsec
   bin/tts
   deploy
+  gitlab.gitconfig
   start/vim.bash
   start/vim.cmd
 '

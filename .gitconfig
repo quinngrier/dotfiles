@@ -22,9 +22,9 @@
 	match = normal magenta
 
 [includeIf "gitdir:gitlab.*/"]
-	path = ~/.gitconfig-gitlab
+	path = ~/gitlab.gitconfig
 [includeIf "gitdir:*.gitlab.*/"]
-	path = ~/.gitconfig-gitlab
+	path = ~/gitlab.gitconfig
 
 [include]
 	path = .gitconfig-private
