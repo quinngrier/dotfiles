@@ -8,5 +8,9 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+# TODO: Aliases can use other aliases since Git 2.20 (2018). Take
+#       advantage of this once Git 2.20 is ubiquitous.
+
 [alias]
-	pam = push -o merge_request.create -o merge_request.remove_source_branch -o merge_request.merge_when_pipeline_succeeds
+	pmr = push -o merge_request.create -o merge_request.remove_source_branch
+	pmrm = push -o merge_request.create -o merge_request.remove_source_branch -o merge_request.merge_when_pipeline_succeeds
