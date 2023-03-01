@@ -48,6 +48,7 @@ files='
   bin/tts
   deploy
   gitlab.gitconfig
+  reg/classic-right-click.reg
   start/vim.bash
   start/vim.cmd
 '
