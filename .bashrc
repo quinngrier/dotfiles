@@ -245,41 +245,27 @@ PS1_function() {
 PS1='$(PS1_function "${PIPESTATUS[@]}")'
 
 #-----------------------------------------------------------------------
-# gpg-agent and ssh-agent
+# Start or inherit gpg-agent and ssh-agent
 #-----------------------------------------------------------------------
-#
-# The idea here is to create a string $boot that represents the system
-# boot time and store the agent hookup commands in some files in $HOME
-# whose names include $boot. We can then check whether the files exist
-# to decide whether the agents are already running. If the files exist,
-# we'll eval them to hook ourselves to the already running agents, and
-# if not, we'll start the agents and create the files first.
-#
 
 eval " $(
-  case $(uname) in
-    (*CYGWIN*)
-      x='WMIC OS GET LastBootUpTime'
-      boot=$($x | tr -d '\t\r ' | sed -n 2p) || exit
-    ;;
-    (*)
-      boot=$(who -b | sed 's/.*boot//') || exit
-      boot=$(date -d "$boot" '+%s') || exit
-    ;;
-  esac
-  start_or_inherit() {
-    local x="$HOME/.bashrc-$1"
-    if [[ ! -f "$x-$boot" ]]; then
-      rm -f "$x-"*
-      eval "$@" >"$x-$boot.$$" || return
-      mv -f "$x-$boot.$$" "$x-$boot" || return
+  if x=$(ps xo comm); then
+    if [[ "$x" == *gpg-agent* ]]; then
+      cat ~/.gpg-agent.sh
+    else
+      y=$(gpg-agent --daemon)
+      printf '%s\n' "$y"
+      printf '%s\n' "$y" >~/.gpg-agent.sh
     fi
-    x=$(cat "$x-$boot") || return
-    printf '%s\n' "$x" || return
-  }
-  start_or_inherit gpg-agent --daemon
-  start_or_inherit ssh-agent
-)"
+    if [[ "$x" == *ssh-agent* ]]; then
+      cat ~/.ssh-agent.sh
+    else
+      y=$(ssh-agent)
+      printf '%s\n' "$y"
+      printf '%s\n' "$y" >~/.ssh-agent.sh
+    fi
+  fi
+)" >/dev/null
 
 if GPG_TTY=$(tty); then
   export GPG_TTY
