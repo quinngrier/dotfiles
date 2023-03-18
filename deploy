@@ -49,6 +49,7 @@ files='
   deploy
   gitlab.gitconfig
   reg/classic-right-click.reg
+  reg/disable-menu-show-delay.reg
   start/vim.bash
   start/vim.cmd
 '
