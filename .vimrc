@@ -240,6 +240,8 @@ nnoremap <silent> gq :call Gq(0)<CR>
 xnoremap <silent> gq <Esc>:call Gq(1)<CR>
 
 "-----------------------------------------------------------------------
+" Code formatting
+"-----------------------------------------------------------------------
 "
 " :<C-u>call and all_lines are used instead of :<C-u>%call because the
 " latter seems to always move the cursor to line 1.
