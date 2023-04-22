@@ -272,7 +272,7 @@ function! DoClangFormat(all_lines, clang_format) range
 
   if l:indent > 0
     call append(l:last, repeat(['}'], l:indent))
-    call append(l:first - 1, repeat(['{'], l:indent))
+    call append(l:first - 1, repeat(['if (x) {'], l:indent))
     let l:last += l:indent * 2
   endif
 
