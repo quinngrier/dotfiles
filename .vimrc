@@ -248,6 +248,7 @@ xnoremap <silent> gq <Esc>:call Gq(1)<CR>
 "
 
 function! DoClangFormat(all_lines, clang_format) range
+
   let l:x = '%(\.m4)?%(\.im)?%(\.in)?$'
   let l:y = '\.%(c|cpp|cs|h|hpp|java|js)' . l:x
   let l:f = @%
@@ -298,6 +299,7 @@ function! DoClangFormat(all_lines, clang_format) range
   execute l:x
 
   echo 'make sure the output is nonempty'
+
 endfunction
 
 function! Format(all_lines) range
