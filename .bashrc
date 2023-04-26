@@ -250,19 +250,19 @@ PS1='$(PS1_function "${PIPESTATUS[@]}")'
 
 eval " $(
   if x=$(ps xo comm); then
-    if [[ "$x" == *gpg-agent* ]]; then
-      cat ~/.gpg-agent.sh
-    else
+    if [[ "$x" != *gpg-agent* ]]; then
       y=$(gpg-agent --daemon)
       printf '%s\n' "$y"
       printf '%s\n' "$y" >~/.gpg-agent.sh
+    elif [[ "${GPG_AGENT_INFO-}" == "" ]]; then
+      cat ~/.gpg-agent.sh
     fi
-    if [[ "$x" == *ssh-agent* ]]; then
-      cat ~/.ssh-agent.sh
-    else
+    if [[ "$x" != *ssh-agent* ]]; then
       y=$(ssh-agent)
       printf '%s\n' "$y"
       printf '%s\n' "$y" >~/.ssh-agent.sh
+    elif [[ "${SSH_AGENT_PID-}" == "" ]]; then
+      cat ~/.ssh-agent.sh
     fi
   fi
 )" >/dev/null
