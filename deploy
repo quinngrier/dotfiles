@@ -40,8 +40,6 @@ files='
   bin/gpgsec-aws
   bin/jqbc
   bin/s
-  bin/scp
-  bin/ssh
   bin/ssh-autokey
   bin/ssh-keygen
   bin/sshqg
