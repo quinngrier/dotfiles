@@ -9,31 +9,37 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+#
+# This script wraps every ssh command with ssh-agent.
+#
+
 #-----------------------------------------------------------------------
 
 remove_home_bin='
-  s|:'$HOME'/bin||g
+  :again
   s|^'$HOME'/bin:||
-  s|^'$HOME'/bin$||
+  s|:'$HOME'/bin:|:|g
+  s|:'$HOME'/bin$||
+  t again
 '
 readonly remove_home_bin
 
-PATH_WITHOUT_HOME_BIN=`
-  LC_ALL=C eval " ${SED:-sed}"' "$remove_home_bin"' <<EOF
-$PATH
+PATH_without_home_bin=`
+  LC_ALL=C eval " ${SED:-sed}"' "${remove_home_bin?}"' <<EOF
+${PATH?}
 EOF
 ` || exit $?
-readonly PATH_WITHOUT_HOME_BIN
+readonly PATH_without_home_bin
 
 ssh=`
-  PATH=$PATH_WITHOUT_HOME_BIN command -v ssh
+  PATH=${PATH_without_home_bin?} command -v ssh
 ` || exit $?
 readonly ssh
 
 #-----------------------------------------------------------------------
 
-s=0
-command -v ssh-agent >/dev/null || s=$?
+command -v ssh-agent >/dev/null
+s=$?
 case ${s?} in 0)
   case $# in 0)
     exec ssh-agent "${ssh?}"
