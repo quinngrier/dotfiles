@@ -247,20 +247,22 @@ PS1='$(PS1_function "${PIPESTATUS[@]}")'
 #-----------------------------------------------------------------------
 # Start or inherit gpg-agent and ssh-agent
 #-----------------------------------------------------------------------
+#
+# This is carefully written to work even on Cygwin.
+#
 
 eval " $(
-  if x=$(ps xo comm,pid); then
-    if [[ "$x" != $'\ngpg-agent ' ]]; then
+  if x=$(ps -e); then
+    if [[ "$x" != *gpg-agent* ]]; then
       gpg-agent --daemon
     fi
     if [[ "${SSH_AGENT_PID-}" == "" ]]; then
       r=1
-      if [[ "$x" == $'\nssh-agent ' && -f ~/.ssh-agent.sh ]]; then
-        y=${x##*$'\nssh-agent'}
-        y=${y%%$'\n'*}
-        y=${y// /}
+      if [[ "$x" == *ssh-agent* && -f ~/.ssh-agent.sh ]]; then
+        y=${x%%ssh-agent*}
+        y=${y##*$'\n'}
         eval " $(cat ~/.ssh-agent.sh)"
-        if [[ "$y" == "${SSH_AGENT_PID-}" ]]; then
+        if [[ "$y" == *"${SSH_AGENT_PID:-xxx}"* ]]; then
           r=0
         fi
       fi
