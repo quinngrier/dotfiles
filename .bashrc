@@ -261,7 +261,7 @@ eval " $(
       if [[ "$x" == *ssh-agent* && -f ~/.ssh-agent.sh ]]; then
         y=${x%%ssh-agent*}
         y=${y##*$'\n'}
-        eval " $(cat ~/.ssh-agent.sh)"
+        eval " $(cat ~/.ssh-agent.sh)" >/dev/null
         if [[ "$y" == *"${SSH_AGENT_PID:-xxx}"* ]]; then
           r=0
         fi
