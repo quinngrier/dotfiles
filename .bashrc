@@ -249,19 +249,26 @@ PS1='$(PS1_function "${PIPESTATUS[@]}")'
 #-----------------------------------------------------------------------
 
 eval " $(
-  if x=$(ps xo comm); then
-    if [[ "$x" != *gpg-agent* ]]; then
-      y=$(gpg-agent --daemon)
-      printf '%s\n' "$y"
-      printf '%s\n' "$y" >~/.gpg-agent.sh
-    elif [[ "${GPG_AGENT_INFO-}" == "" ]]; then
-      cat ~/.gpg-agent.sh
+  if x=$(ps xo comm,pid); then
+    if [[ "$x" != $'\ngpg-agent ' ]]; then
+      gpg-agent --daemon
     fi
-    if [[ "$x" != *ssh-agent* ]]; then
-      y=$(ssh-agent)
-      printf '%s\n' "$y"
-      printf '%s\n' "$y" >~/.ssh-agent.sh
-    elif [[ "${SSH_AGENT_PID-}" == "" ]]; then
+    if [[ "${SSH_AGENT_PID-}" == "" ]]; then
+      r=1
+      if [[ "$x" == $'\nssh-agent ' && -f ~/.ssh-agent.sh ]]; then
+        y=${x##*$'\nssh-agent'}
+        y=${y%%$'\n'*}
+        y=${y// /}
+        eval " $(cat ~/.ssh-agent.sh)"
+        if [[ "$y" == "${SSH_AGENT_PID-}" ]]; then
+          r=0
+        fi
+      fi
+      if ((r)); then
+        y=$(ssh-agent -s)
+        printf '%s\n' "$y"
+        printf '%s\n' "$y" >~/.ssh-agent.sh
+      fi
       cat ~/.ssh-agent.sh
     fi
   fi
