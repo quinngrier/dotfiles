@@ -1,0 +1,57 @@
+#! /bin/sh -
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+#
+# This script wraps every scp command with ssh-agent.
+#
+
+#-----------------------------------------------------------------------
+
+remove_home_bin='
+  :again
+  s|^'$HOME'/bin:||
+  s|:'$HOME'/bin:|:|g
+  s|:'$HOME'/bin$||
+  t again
+'
+readonly remove_home_bin
+
+PATH_without_home_bin=`
+  LC_ALL=C eval " ${SED:-sed}"' "${remove_home_bin?}"' <<EOF
+${PATH?}
+EOF
+` || exit $?
+readonly PATH_without_home_bin
+
+scp=`
+  PATH=${PATH_without_home_bin?} command -v scp
+` || exit $?
+readonly scp
+
+#-----------------------------------------------------------------------
+
+command -v ssh-agent >/dev/null
+s=$?
+case ${s?} in 0)
+  case $# in 0)
+    exec ssh-agent "${scp?}"
+  ;; *)
+    exec ssh-agent "${scp?}" "$@"
+  esac
+;; 1)
+  case $# in 0)
+    exec "${scp?}"
+  ;; *)
+    exec "${scp?}" "$@"
+  esac
+;; *)
+  exit ${s?}
+esac
