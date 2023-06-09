@@ -1,0 +1,35 @@
+#! /bin/sh -
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+#
+# This script allows any command to be used with Terraform's external
+# data source. For example:
+#
+#       data "external" "foo" {
+#         program = ["tfdata", "echo", "hello", "world"]
+#       }
+#
+#       # data.external.foo.result.stdout will be "hello world".
+#
+# This script does not parse any options. It simply runs the arguments
+# as a command. /dev/null is always used for the standard input of the
+# command. If no arguments are given, no command is run and the output
+# will be empty.
+#
+
+case $# in 0)
+  :
+;; *)
+  stdout=`"$@" </dev/null` || exit $?
+  jq --arg stdout "${stdout?}" -a -n '{stdout: $stdout}' || exit $?
+esac
+
