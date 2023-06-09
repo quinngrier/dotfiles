@@ -18,7 +18,7 @@
 #         program = ["tfdata", "echo", "hello", "world"]
 #       }
 #
-#       # data.external.foo.result.stdout will be "hello world".
+#       # data.external.foo.result.value will be "hello world".
 #
 # This script does not parse any options. It simply runs the arguments
 # as a command. /dev/null is always used for the standard input of the
@@ -29,7 +29,7 @@
 case $# in 0)
   :
 ;; *)
-  stdout=`"$@" </dev/null` || exit $?
-  jq --arg stdout "${stdout?}" -a -n '{stdout: $stdout}' || exit $?
+  value=`"$@" </dev/null` || exit $?
+  jq --arg value "${value?}" -a -n '{value: $value}' || exit $?
 esac
 
