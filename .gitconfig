@@ -21,6 +21,12 @@
 [color "grep"]
 	match = normal magenta
 
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required
+
 [includeIf "gitdir:gitlab.*/"]
 	path = ~/gitlab.gitconfig
 [includeIf "gitdir:*.gitlab.*/"]
