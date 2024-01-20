@@ -244,7 +244,10 @@ xnoremap <silent> gq <Esc>:call Gq(1)<CR>
 "-----------------------------------------------------------------------
 "
 " :<C-u>call and all_lines are used instead of :<C-u>%call because the
-" latter seems to always move the cursor to line 1.
+" latter always moves the cursor to line 1 instead of leaving it alone.
+"
+" Note that the purpose of <C-u> is to remove any possible range that
+" Vim automatically inserts when : is entered.
 "
 
 function! DoClangFormat(all_lines, clang_format) range
