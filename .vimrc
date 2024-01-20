@@ -253,8 +253,19 @@ xnoremap <silent> gq <Esc>:call Gq(1)<CR>
 function! DoClangFormat(all_lines, clang_format) range
 
   let l:x = '%(\.m4)?%(\.im)?%(\.in)?$'
-  let l:y = '\.%(c|cpp|cs|h|hpp|java|js)' . l:x
+
+  let l:y = '\.%(c'
+  let l:y = l:y . '|c'
+  let l:y = l:y . '|cpp'
+  let l:y = l:y . '|cs'
+  let l:y = l:y . '|h'
+  let l:y = l:y . '|hpp'
+  let l:y = l:y . '|java'
+  let l:y = l:y . '|js'
+  let l:y = ')' . l:x
+
   let l:f = @%
+
   if l:f =~ '\v' . l:y
     let l:f = substitute(l:f, '\v' . l:x, '', '')
     let l:f = substitute(l:f, '\v.*\.', 'x.', '')
