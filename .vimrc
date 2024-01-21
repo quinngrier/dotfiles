@@ -263,7 +263,7 @@ function! DoClangFormat(all_lines, clang_format) range
   let l:y = l:y . '|java'
   let l:y = l:y . '|js'
   let l:y = l:y . '|mjs'
-  let l:y = ')' . l:x
+  let l:y = l:y . ')' . l:x
 
   let l:f = @%
 
