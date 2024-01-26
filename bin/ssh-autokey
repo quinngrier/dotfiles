@@ -50,9 +50,6 @@ check_for_file() {
 }
 
 #-----------------------------------------------------------------------
-#
-# If we don't have ssh-add, there's nothing we can do.
-#
 
 if command -v ssh-add >/dev/null 2>/dev/null; then
   have_ssh_add=:
@@ -61,16 +58,6 @@ else
 fi
 readonly have_ssh_add
 
-if ${have_ssh_add?}; then
-  :
-else
-  finish
-fi
-
-#-----------------------------------------------------------------------
-# gpgsec
-#-----------------------------------------------------------------------
-
 if command -v gpgsec >/dev/null 2>/dev/null; then
   have_gpgsec=:
 else
@@ -78,6 +65,11 @@ else
 fi
 readonly have_gpgsec
 
+if ${have_ssh_add?}; then
+  :
+else
+  finish
+fi
 
 if ${have_gpgsec?}; then
 
