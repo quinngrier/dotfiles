@@ -49,25 +49,17 @@ check_for_file() {
   readonly ${2?}
 }
 
-check_for_program() {
-  eval ${2?}=:
-  command -v "${1?}" >/dev/null || {
-    check_for_program_status=$?
-    case ${check_for_program_status?} in 1)
-      eval ${2?}=false
-    ;; *)
-      exit ${check_for_program_status?}
-    esac
-  }
-  readonly ${2?}
-}
-
 #-----------------------------------------------------------------------
 #
 # If we don't have ssh-add, there's nothing we can do.
 #
 
-check_for_program ssh-add have_ssh_add
+if command -v ssh-add >/dev/null 2>/dev/null; then
+  have_ssh_add=:
+else
+  have_ssh_add=false
+fi
+readonly have_ssh_add
 
 if ${have_ssh_add?}; then
   :
@@ -79,7 +71,13 @@ fi
 # gpgsec
 #-----------------------------------------------------------------------
 
-check_for_program gpgsec have_gpgsec
+if command -v gpgsec >/dev/null 2>/dev/null; then
+  have_gpgsec=:
+else
+  have_gpgsec=false
+fi
+readonly have_gpgsec
+
 
 if ${have_gpgsec?}; then
 
