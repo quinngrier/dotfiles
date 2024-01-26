@@ -25,13 +25,6 @@ user=${1?}
 readonly user
 shift
 
-unset key
-case ${1+x} in ?*)
-  key=${1?}
-  shift
-esac
-readonly key
-
 unset key_content
 
 finish() {
@@ -90,7 +83,7 @@ check_for_program gpgsec have_gpgsec
 
 if ${have_gpgsec?}; then
 
-  gpgsec_entry=${key-"ssh-autokey/${host?}/${user?}"}
+  gpgsec_entry=ssh-autokey/${host?}/${user?}
   readonly gpgsec_entry
 
   # TODO: gpgsec should have an option to check for entry existence.
