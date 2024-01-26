@@ -9,8 +9,8 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-real_host=${1?}
-readonly real_host
+hostname=${1?}
+readonly hostname
 shift
 
 host=${1?}
@@ -25,68 +25,23 @@ user=${1?}
 readonly user
 shift
 
-unset key_content
-
-finish() {
-  case ${key_content+x} in ?*)
-    ssh-add -t 10 -q - <<EOF || :
-${key_content?}
-EOF
-  esac
-  exec nc "${real_host?}" "${port?}" || exit $?
-}
-
-check_for_file() {
-  eval ${2?}=:
-  test -f "${1?}" || {
-    check_for_file_status=$?
-    case ${check_for_file_status?} in 1)
-      eval ${2?}=false
-    ;; *)
-      exit ${check_for_file_status?}
-    esac
-  }
-  readonly ${2?}
-}
-
-#-----------------------------------------------------------------------
+jump=${1-}
+readonly jump
 
 if command -v ssh-add >/dev/null 2>/dev/null; then
-  have_ssh_add=:
-else
-  have_ssh_add=false
-fi
-readonly have_ssh_add
-
-if command -v gpgsec >/dev/null 2>/dev/null; then
-  have_gpgsec=:
-else
-  have_gpgsec=false
-fi
-readonly have_gpgsec
-
-if ${have_ssh_add?}; then
-  :
-else
-  finish
-fi
-
-if ${have_gpgsec?}; then
-
-  gpgsec_entry=ssh-autokey/${host?}/${user?}
-  readonly gpgsec_entry
-
-  # TODO: gpgsec should have an option to check for entry existence.
-  check_for_file ~/.gpgsec/"${gpgsec_entry?}".gpg have_gpgsec_entry
-
-  if ${have_gpgsec_entry?}; then
-    key_content=`gpgsec -- "${gpgsec_entry?}"` || exit $?
-    readonly key_content
-    finish
+  if command -v gpgsec >/dev/null 2>/dev/null; then
+    name=ssh-autokey/${host?}/${user?}
+    if test -f ~/.gpgsec/"${name?}".gpg; then
+      key=`gpgsec -- "${name?}"` || exit $?
+      ssh-add -t 60 -q - <<EOF || exit $?
+${key?}
+EOF
+    fi
   fi
-
 fi
 
-#-----------------------------------------------------------------------
+case ${jump?} in '')
+  exec nc -- "${hostname?}" "${port?}" || exit $?
+esac
 
-finish
+exec ssh -W "${hostname?}:${port?}" -- "${jump?}" || exit $?
