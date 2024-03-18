@@ -4,6 +4,12 @@ LC_ALL=C
 readonly LC_ALL
 export LC_ALL
 
+nl='
+'
+readonly nl
+
+remote=upstream
+
 case $#,$1 in
   1,--help)
     cat <<'EOF' || exit $?
@@ -12,6 +18,10 @@ Usage: git ub [<branch=work> [<remote=upstream> [<start=master>]]]
 Switches to branch <start>, then fetches and merges it from <remote>,
 then starts <branch> from it. <branch> will be recreated if it already
 exists as an ancestor of <start>.
+
+If <remote> is "upstream" but this remote is not defined, <remote> will
+be adjusted to "origin". This allows both origin+upstream workflows and
+origin-only workflows to be used without specifying <remote>.
 EOF
     exit 0
   ;;
@@ -28,8 +38,17 @@ esac
 
 readonly git="${GIT:-git}"
 
+case ${remote?} in upstream)
+  xs=`eval " ${git?} remote"` || exit $?
+  case ${xs?} in *"${nl?}upstream${nl?}"* | *"${nl?}upstream")
+    :
+  ;; *)
+    remote=origin
+  esac
+esac
+
 readonly branch="${1-work}"
-readonly remote="${2-upstream}"
+readonly remote
 readonly start="${3-master}"
 
 eval " $git"' u -- "$remote" "$start"' || exit $?
