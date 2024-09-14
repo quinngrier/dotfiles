@@ -190,6 +190,9 @@ HISTSIZE=$HISTFILESIZE
 #       \H is $HOSTNAME
 #
 
+# We'll output a Python virtual environment indicator ourselves.
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 PS1_function() {
 
   declare -r e=$'\001\033'
@@ -224,6 +227,12 @@ PS1_function() {
   x="[$u@$H:$PWD]"
   s+="$x"
   n=$((n - ${#x}))
+
+  # Python virtual environment indicator.
+  if [[ "${VIRTUAL_ENV-}" ]]; then
+    s+="[$e[33${m}venv$e[39$m]"
+    n=$((n - 6))
+  fi
 
   while ((n > ${#f})); do
     s+="$f"
