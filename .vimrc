@@ -313,7 +313,32 @@ function! DoClangFormat(all_lines, clang_format) range
   let l:x .= repeat(' | sed \$d', l:indent)
   execute l:x
 
-  echo 'make sure the output is nonempty'
+  echo 'ok'
+
+endfunction
+
+function! DoRustFormat(all_lines) range
+
+  let l:f = @%
+
+  if l:f !~ '\v\.rs$'
+    return
+  endif
+
+  if !a:all_lines
+    echo "Can't format Rust snippets"
+    return
+  endif
+
+  let l:first = 1
+  let l:last = line('$')
+
+  let l:x = 'silent '
+  let l:x .= l:first . ',' . l:last . '!'
+  let l:x .= 'rustfmt '
+  execute l:x
+
+  echo 'ok'
 
 endfunction
 
@@ -341,8 +366,25 @@ function! Format(all_lines) range
     let l:x .= 'call DoClangFormat(' . a:all_lines
     let l:x .= ', "clang-format")'
     let l:x = execute(l:x, 'silent')
-    if l:x != ''
+    if l:x == 'ok'
       let l:formatted = 1
+    elseif l:x != ''
+      redraw
+      echo l:x
+      return
+    endif
+  endif
+
+  if !l:formatted
+    let l:x = l:range
+    let l:x .= 'call DoRustFormat(' . a:all_lines . ')'
+    let l:x = execute(l:x, 'silent')
+    if l:x == 'ok'
+      let l:formatted = 1
+    elseif l:x != ''
+      redraw
+      echo l:x
+      return
     endif
   endif
 
