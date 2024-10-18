@@ -365,7 +365,7 @@ function! Format(all_lines) range
     let l:x = l:range
     let l:x .= 'call DoClangFormat(' . a:all_lines
     let l:x .= ', "clang-format")'
-    let l:x = execute(l:x, 'silent')
+    let l:x = substitute(execute(l:x), '\v.*\n', '', '')
     if l:x == 'ok'
       let l:formatted = 1
     elseif l:x != ''
@@ -378,7 +378,7 @@ function! Format(all_lines) range
   if !l:formatted
     let l:x = l:range
     let l:x .= 'call DoRustFormat(' . a:all_lines . ')'
-    let l:x = execute(l:x, 'silent')
+    let l:x = substitute(execute(l:x), '\v.*\n', '', '')
     if l:x == 'ok'
       let l:formatted = 1
     elseif l:x != ''
