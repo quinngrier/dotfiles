@@ -272,6 +272,7 @@ function! DoClangFormat(all_lines, clang_format) range
     let l:f = substitute(l:f, '\v.*\.', 'x.', '')
     let l:clang_format_args = '--assume-filename=' . l:f
   else
+    echo ''
     return
   endif
 
@@ -322,6 +323,7 @@ function! DoRustFormat(all_lines) range
   let l:f = @%
 
   if l:f !~ '\v\.rs$'
+    echo ''
     return
   endif
 
