@@ -50,6 +50,7 @@ files='
   gitlab.gitconfig
   reg/classic-right-click.reg
   reg/disable-menu-show-delay.reg
+  reg/open-cygwin-terminal-here.reg
   start/vim.bash
   start/vim.cmd
 '

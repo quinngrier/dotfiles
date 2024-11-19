@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+;
+; The authors of this file have waived all copyright and
+; related or neighboring rights to the extent permitted by
+; law as described by the CC0 1.0 Universal Public Domain
+; Dedication. You should have received a copy of the full
+; dedication along with this file, typically as a file
+; named <CC0-1.0.txt>. If not, it may be available at
+; <https://creativecommons.org/publicdomain/zero/1.0/>.
+;
+
+;
+; This registry file adds an "Open Cygwin terminal here" item to the
+; right-click menu in File Explorer.
+;
+; Be sure to adjust all occurrences of "C:\\cygwin" as needed. You can
+; also change/delete the menu item hotkey by moving/deleting the "&"
+; character in the "Open &Cygwin terminal here" string.
+;
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\open-cygwin-terminal-here]
+@="Open &Cygwin terminal here"
+"Icon"="C:\\cygwin\\Cygwin-Terminal.ico"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\open-cygwin-terminal-here\command]
+@="C:\\cygwin\\bin\\mintty.exe -i /Cygwin-Terminal.ico --dir \"%V\\.\" -"
