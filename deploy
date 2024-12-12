@@ -38,6 +38,7 @@ files='
   bin/gpgqu
   bin/gpgsec
   bin/gpgsec-aws
+  bin/https-server
   bin/jqbc
   bin/s
   bin/ssh-autokey

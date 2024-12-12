@@ -1,0 +1,102 @@
+#! /bin/sh -
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+#
+# https-server - Runs an HTTPS server
+#
+# Written in portable shell, but uses OpenSSL and Python.
+#
+
+cert=${HOME?}/https-server.cert.pem
+readonly cert
+
+key=${HOME?}/https-server.key.pem
+readonly key
+
+cert_found=0
+if test -f "${cert?}"; then
+  printf '%s\n' "Certificate found: ${cert?}" || exit $?
+  cert_found=1
+else
+  printf '%s\n' "Certificate not found: ${cert?}" || exit $?
+fi
+
+key_found=0
+if test -f "${key?}"; then
+  printf '%s\n' "Key found: ${key?}" || exit $?
+  key_found=1
+else
+  printf '%s\n' "Key not found: ${key?}" || exit $?
+fi
+
+regen=0
+case ${cert_found?}${key_found?} in 11)
+  if openssl x509 -checkend 86400 -in "${cert?}"; then
+    printf '%s\n' "Certificate is good for at least 24 hours" || exit $?
+    a=`openssl x509 -modulus -in "${cert?}" -noout | openssl sha256` || exit $?
+    b=`openssl rsa -modulus -in "${key?}" -noout | openssl sha256` || exit $?
+    case ${a?} in "${b?}")
+      printf '%s\n' "Certificate matches key" || exit $?
+    ;; *)
+      printf '%s\n' "Certificate does not match key" || exit $?
+      regen=1
+    esac
+  else
+    printf '%s\n' "Certificate will expire in less than 24 hours" || exit $?
+    regen=1
+  fi
+;; *)
+  regen=1
+esac
+
+case ${regen?} in 1)
+  printf '%s\n' "Regenerating certificate and key" || exit $?
+  openssl req \
+    -days 365 \
+    -keyout "${key?}" \
+    -newkey rsa:2048 \
+    -nodes \
+    -out "${cert?}" \
+    -subj '/C=XX/ST=Test/L=Test/O=Test/CN=Test' \
+    -x509 \
+  || exit $?;
+esac
+
+python3 - "${cert?}" "${key?}" "$@" <<'EOF'
+
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import os
+import ssl
+import sys
+
+class MyHandler(SimpleHTTPRequestHandler):
+  def end_headers(self):
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+    self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
+    super().end_headers()
+
+cert = sys.argv[1]
+key = sys.argv[2]
+
+if len(sys.argv) > 3:
+  port = int(sys.argv[3])
+else:
+  port = 8443
+
+print(f"Starting server on port {port}")
+
+httpd = HTTPServer(('0.0.0.0', port), MyHandler)
+httpd.socket = ssl.wrap_socket(httpd.socket, certfile=cert, keyfile=key, server_side=True)
+httpd.serve_forever()
+
+EOF
