@@ -31,7 +31,7 @@ until (exit ${1+1}0); do
       --=*)
         cat <<EOF >&2
 $0: the -- option forbids an argument: $1
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
         exit 1
       ;;
@@ -52,7 +52,7 @@ EOF
       --help=*)
         cat <<EOF >&2
 $0: the --help option forbids an argument: $1
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
         exit 1
       ;;
@@ -74,7 +74,7 @@ EOF
         eval option="$option"
         cat <<EOF >&2
 $0: Unknown option: $option
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
         exit 1
       ;;
@@ -84,7 +84,7 @@ EOF
         cat <<EOF >&2
 $0: Unknown option: -
 
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
         exit 1
       ;;
@@ -96,7 +96,7 @@ EOF
         ` || exit $?
         cat <<EOF >&2
 $0: Unknown option: $option
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
         exit 1
       ;;
@@ -110,7 +110,7 @@ EOF
     branch)
       cat <<EOF >&2
 $0: too many operands: $1
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
       exit 1
     ;;
@@ -137,7 +137,7 @@ case $remote in
   -*)
     cat <<EOF >&2
 $0: <remote> must not begin with a - character: $remote
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
     exit 1
   ;;
@@ -147,7 +147,7 @@ case $branch in
   -*)
     cat <<EOF >&2
 $0: <branch> must not begin with a - character: $branch
-$0: run "git-u --help" for help
+$0: Run "git-u --help" for help.
 EOF
     exit 1
   ;;
