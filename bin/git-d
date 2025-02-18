@@ -4,10 +4,14 @@ LC_ALL=C
 readonly LC_ALL
 export LC_ALL
 
+nl='
+'
+readonly nl
+
 readonly git="${GIT:-git}"
 readonly sed="${SED:-sed}"
 
-commit=master
+commit=main
 
 parse_options=:
 operand_var=
@@ -33,10 +37,13 @@ EOF
 
       -h* | --help)
         cat <<'EOF' || exit $?
-Usage: git d [<commit=master>]
+Usage: git d [<commit=main>]
 
 Deletes all branches that are reachable from <commit> except for branch
-master, branch main, and the current branch.
+main, branch master, and the current branch.
+
+If <commit> is "main" but this branch does not exist and branch "master"
+exists, <commit> will be adjusted to "master".
 EOF
         exit 0
       ;;
@@ -111,6 +118,20 @@ EOF
   shift
 
 done
+
+case ${commit?} in main)
+  xs=${nl?}`eval " ${git?} for-each-ref \
+    --format='%(refname)' \
+    refs/heads \
+  "`${nl?} || exit $?
+  case ${xs?} in *"${nl?}refs/heads/main${nl?}"*)
+    :
+  ;; *)
+    case ${xs?} in *"${nl?}refs/heads/master${nl?}"*)
+      commit=master
+    esac
+  esac
+esac
 
 readonly commit
 
