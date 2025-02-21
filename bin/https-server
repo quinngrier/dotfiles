@@ -96,7 +96,14 @@ else:
 print(f"Starting server on port {port}")
 
 httpd = HTTPServer(('0.0.0.0', port), MyHandler)
-httpd.socket = ssl.wrap_socket(httpd.socket, certfile=cert, keyfile=key, server_side=True)
+
+try:
+  httpd.socket = ssl.wrap_socket(httpd.socket, certfile=cert, keyfile=key, server_side=True)
+except:
+  ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+  ctx.load_cert_chain(certfile=cert, keyfile=key)
+  httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+
 httpd.serve_forever()
 
 EOF
