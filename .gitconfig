@@ -36,7 +36,7 @@
 	path = ~/gitlab.gitconfig
 
 [include]
-	path = .gitconfig-private
+	path = .gitconfig.private
 
 [init]
 	defaultBranch = main
