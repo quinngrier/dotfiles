@@ -23,6 +23,7 @@ files='
   .inputrc
   .mailmap
   .minttyrc
+  .profile
   .screenrc
   .ssh/config
   .vimrc
