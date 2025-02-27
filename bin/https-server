@@ -16,10 +16,10 @@
 # Written in portable shell, but uses OpenSSL and Python.
 #
 
-cert=${HOME?}/https-server.cert.pem
+cert=${HOME?}/.https-server/cert.pem
 readonly cert
 
-key=${HOME?}/https-server.key.pem
+key=${HOME?}/.https-server/key.pem
 readonly key
 
 cert_found=0
@@ -60,6 +60,14 @@ esac
 
 case ${regen?} in 1)
   printf '%s\n' "Regenerating certificate and key" || exit $?
+  case ${cert_found?} in 0)
+    mkdir -p "${cert?}"
+    rmdir "${cert?}"
+  esac
+  case ${key_found?} in 0)
+    mkdir -p "${key?}"
+    rmdir "${key?}"
+  esac
   openssl req \
     -days 365 \
     -keyout "${key?}" \
