@@ -61,12 +61,12 @@ esac
 case ${regen?} in 1)
   printf '%s\n' "Regenerating certificate and key" || exit $?
   case ${cert_found?} in 0)
-    mkdir -p "${cert?}"
-    rmdir "${cert?}"
+    mkdir -p "${cert?}" || exit $?
+    rmdir "${cert?}" || exit $?
   esac
   case ${key_found?} in 0)
-    mkdir -p "${key?}"
-    rmdir "${key?}"
+    mkdir -p "${key?}" || exit $?
+    rmdir "${key?}" || exit $?
   esac
   openssl req \
     -days 365 \
