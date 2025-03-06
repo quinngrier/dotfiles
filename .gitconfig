@@ -22,7 +22,7 @@
 	match = normal magenta
 
 [credential]
-	helper = cache --timeout 3600
+	helper = cache --timeout 86400
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f
