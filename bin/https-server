@@ -11,7 +11,7 @@
 #
 
 #
-# https-server - Runs an HTTPS server
+# https-server - Static HTTPS server for development
 #
 # Written in portable shell, but uses OpenSSL and Python.
 #
@@ -22,54 +22,60 @@ readonly cert
 key=${HOME?}/.https-server/key.pem
 readonly key
 
-cert_found=0
+unset cert_found
 if test -f "${cert?}"; then
   printf '%s\n' "Certificate found: ${cert?}" || exit $?
   cert_found=1
 else
   printf '%s\n' "Certificate not found: ${cert?}" || exit $?
+  cert_found=0
 fi
+readonly cert_found
 
-key_found=0
+unset key_found
 if test -f "${key?}"; then
   printf '%s\n' "Key found: ${key?}" || exit $?
   key_found=1
 else
   printf '%s\n' "Key not found: ${key?}" || exit $?
+  key_found=0
 fi
+readonly key_found
 
-regen=0
+unset regen
 case ${cert_found?}${key_found?} in 11)
-  if openssl x509 -checkend 86400 -in "${cert?}"; then
-    printf '%s\n' "Certificate is good for at least 24 hours" || exit $?
+  if openssl x509 -checkend 31536000 -in "${cert?}"; then
+    printf '%s\n' "Certificate is good for a while" || exit $?
     a=`openssl x509 -modulus -in "${cert?}" -noout | openssl sha256` || exit $?
     b=`openssl rsa -modulus -in "${key?}" -noout | openssl sha256` || exit $?
     case ${a?} in "${b?}")
       printf '%s\n' "Certificate matches key" || exit $?
+      regen=0
     ;; *)
-      printf '%s\n' "Certificate does not match key" || exit $?
+      printf '%s\n' "Certificate mismatches key" || exit $?
       regen=1
     esac
   else
-    printf '%s\n' "Certificate will expire in less than 24 hours" || exit $?
+    printf '%s\n' "Certificate expires soon" || exit $?
     regen=1
   fi
 ;; *)
   regen=1
 esac
+readonly regen
 
 case ${regen?} in 1)
   printf '%s\n' "Regenerating certificate and key" || exit $?
   case ${cert_found?} in 0)
-    mkdir -p "${cert?}" || exit $?
-    rmdir "${cert?}" || exit $?
+    mkdir -p -- "${cert?}" || exit $?
+    rmdir -- "${cert?}" || exit $?
   esac
   case ${key_found?} in 0)
-    mkdir -p "${key?}" || exit $?
-    rmdir "${key?}" || exit $?
+    mkdir -p -- "${key?}" || exit $?
+    rmdir -- "${key?}" || exit $?
   esac
   openssl req \
-    -days 365 \
+    -days 36500 \
     -keyout "${key?}" \
     -newkey rsa:2048 \
     -nodes \
@@ -88,9 +94,9 @@ import sys
 
 class MyHandler(SimpleHTTPRequestHandler):
   def end_headers(self):
-    self.send_header('Access-Control-Allow-Origin', '*')
-    self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
-    self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
+    self.send_header("Access-Control-Allow-Origin", "*")
+    self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+    self.send_header("Cross-Origin-Opener-Policy", "same-origin")
     super().end_headers()
 
 cert = sys.argv[1]
@@ -101,9 +107,9 @@ if len(sys.argv) > 3:
 else:
   port = 8443
 
-print(f"Starting server on port {port}")
+host = "0.0.0.0"
 
-httpd = HTTPServer(('0.0.0.0', port), MyHandler)
+httpd = HTTPServer((host, port), MyHandler)
 
 try:
   httpd.socket = ssl.wrap_socket(httpd.socket, certfile=cert, keyfile=key, server_side=True)
@@ -111,6 +117,8 @@ except:
   ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
   ctx.load_cert_chain(certfile=cert, keyfile=key)
   httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+
+print(f"Running HTTPS server on {host}:{port}")
 
 httpd.serve_forever()
 
