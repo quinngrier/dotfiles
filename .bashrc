@@ -143,7 +143,7 @@ fi
 # script can detect if it was accidentally run without the alias.
 #
 
-alias s='(s_alias_jobs=$(jobs -l) && s s_alias_jobs "$s_alias_jobs")'
+alias s='{ s_alias_jobs=$(jobs -l); s s_alias_jobs "$s_alias_jobs"; }'
 
 #-----------------------------------------------------------------------
 
