@@ -418,6 +418,8 @@ set termwinscroll=100000
 
 "-----------------------------------------------------------------------
 
+filetype plugin on
+
 au vimrc FileType rust set comments=s1:/*!,mb:*,ex:*/,s1:/*,mb:*,ex:*/,:///,://!,://
 autocmd vimrc FileType vim set comments=:\\"
 

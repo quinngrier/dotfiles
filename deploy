@@ -26,6 +26,7 @@ files='
   .profile
   .screenrc
   .ssh/config
+  .vim
   .vimrc
   CC0-1.0.txt
   bin/adock
