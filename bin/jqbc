@@ -15,9 +15,17 @@
 #
 # Runs jq with the given arguments and, for every string that begins
 # with "bc:" in the output, adjusts the string by deleting "bc:" and
-# filtering the remaining text through bc -l. For example, "bc:3^90"
-# will become "8727963568087712425891397479476727340041449", and
-# "bc:1/3" will become ".33333333333333333333".
+# filtering the remaining text through bc -l. The output of bc -l is
+# also adjusted to be formatted more normally. For example:
+#
+#       $ jqbc -n '"bc:1/2"'
+#       "0.5"
+#
+#       $ jqbc -n '"bc:1/3"'
+#       "0.33333333333333333333"
+#
+#       $ jqbc -n '"bc:3^90"'
+#       "8727963568087712425891397479476727340041449"
 #
 
 case ${BASH_BOOTSTRAP+x}y$# in
@@ -56,6 +64,10 @@ jq "$@" | gawk '
         exit 1;
       }
       bc_is_running = 1;
+      if (x[i] ~ /\./) {
+        sub(/^\./, "0.", x[i]);
+        sub(/0+$/, "", x[i]);
+      }
       printf "%s", w "\"" x[i] "\"" y[i];
     }
     printf "\n";
