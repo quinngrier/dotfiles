@@ -420,8 +420,6 @@ set termwinscroll=100000
 
 filetype plugin on
 
-autocmd vimrc FileType vim set comments=:\\"
-
 "-----------------------------------------------------------------------
 " Private vimrc file
 "-----------------------------------------------------------------------
