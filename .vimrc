@@ -12,9 +12,9 @@
 " General notes
 "-----------------------------------------------------------------------
 "
-" * Functions are defined with "function!" instead of "function" to help
-"   keep this vimrc file idempotent. Without the "!", re-sourcing this
-"   vimrc file would fail to overwrite the existing functions.
+" Functions are defined with "function!" instead of "function" to help
+" keep this vimrc file idempotent. Without "!", re-sourcing this vimrc
+" file would fail to overwrite the existing functions.
 "
 
 "-----------------------------------------------------------------------
