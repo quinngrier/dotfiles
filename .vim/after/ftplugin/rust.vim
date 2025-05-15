@@ -8,4 +8,4 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
-set comments=s1:/*!,mb:*,ex:*/,s1:/*,mb:*,ex:*/,b:///,b://!,b://
+setlocal comments=s1:/*!,mb:*,ex:*/,s1:/*,mb:*,ex:*/,b:///,b://!,b://
