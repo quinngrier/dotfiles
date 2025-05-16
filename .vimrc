@@ -147,6 +147,8 @@ set matchpairs+={:}
 
 set nojoinspaces
 
+set shiftwidth=2
+
 set textwidth=72
 
 "-----------------------------------------------------------------------

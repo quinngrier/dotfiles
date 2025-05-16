@@ -8,4 +8,6 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
+setlocal shiftwidth=2
+
 setlocal textwidth=72
