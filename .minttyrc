@@ -16,6 +16,7 @@ CopyOnSelect=no
 CursorType=block
 Font=Cascadia Mono
 FontHeight=14
+ForegroundColour=232,232,232
 Locale=C
 MiddleClickAction=void
 ScrollbackLines=1000000
