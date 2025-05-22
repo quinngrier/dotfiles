@@ -8,6 +8,7 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+BackgroundColour=19,19,25
 BoldAsFont=yes
 Charset=UTF-8
 CopyAsRTF=no
