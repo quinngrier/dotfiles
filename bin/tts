@@ -119,7 +119,10 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
       RUN printf '\''%s\n'\'' \
         '\''from kokoro import KPipeline'\'' \
         '\''pipeline = KPipeline(lang_code="a")'\'' \
-        '\''generator = pipeline("hello", voice="af_heart")'\'' \
+        '\''generator = pipeline("hello",'\'' \
+        '\''  speed=1.25,'\'' \
+        '\''  voice="af_heart",'\'' \
+        '\'')'\'' \
         '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
         '\''  pass'\'' \
         >/init.py \
@@ -130,7 +133,10 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
         '\''import numpy as np'\'' \
         '\''import sys'\'' \
         '\''pipeline = KPipeline(lang_code="a")'\'' \
-        '\''generator = pipeline(sys.stdin.read(), voice="af_heart")'\'' \
+        '\''generator = pipeline(sys.stdin.read(),'\'' \
+        '\''  speed=1.25,'\'' \
+        '\''  voice="af_heart",'\'' \
+        '\'')'\'' \
         '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
         '\''  audio_np = np.asarray(audio, dtype=np.float32)'\'' \
         '\''  sys.stdout.buffer.write(audio_np.tobytes())'\'' \
