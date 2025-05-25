@@ -101,17 +101,7 @@ if [[ ${WINDIR+x} && ! ${AUDIODRIVER+x} ]]; then
   AUDIODRIVER=waveaudio
   readonly AUDIODRIVER
   export AUDIODRIVER
-  if [[ ! ${TTS_RIGHT_PAD+x} ]]; then
-    TTS_RIGHT_PAD='pad 0 1'
-  fi
 fi
-
-if [[ ! ${TTS_RIGHT_PAD+x} ]]; then
-  TTS_RIGHT_PAD=
-fi
-readonly TTS_RIGHT_PAD
-
-export DOCKER_CLI_HINTS=false
 
 #-----------------------------------------------------------------------
 # kokoro
@@ -119,63 +109,53 @@ export DOCKER_CLI_HINTS=false
 
 if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
 
-  docker build -q -t tts-kokoro:0.9.4 - <<<'
-    FROM python:3.10
-    RUN apt-get -q -y update
-    RUN apt-get -q -y install espeak-ng
-    RUN pip install kokoro==0.9.4 soundfile
-    RUN printf '\''%s\n'\'' \
-      '\''from kokoro import KPipeline'\'' \
-      '\''pipeline = KPipeline(lang_code="a")'\'' \
-      '\''generator = pipeline("hello", voice="af_heart")'\'' \
-      '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
-      '\''  pass'\'' \
-      >init.py \
-    ;
-    RUN python init.py
-    RUN printf '\''%s\n'\'' \
-      '\''from kokoro import KPipeline'\'' \
-      '\''import soundfile as sf'\'' \
-      '\''import sys'\'' \
-      '\''pipeline = KPipeline(lang_code="a")'\'' \
-      '\''generator = pipeline(sys.stdin.read(), voice="af_heart")'\'' \
-      '\''with open("tmp.raw", "wb") as raw:'\'' \
-      '\''  for i, (gs, ps, audio) in enumerate(generator):'\'' \
-      '\''    sf.write(raw, audio,'\'' \
-      '\''      closefd=False,'\'' \
-      '\''      format="RAW",'\'' \
-      '\''      samplerate=24000,'\'' \
-      '\''      subtype="PCM_16",'\'' \
-      '\''    )'\'' \
-      >run.py \
-    ;
-  ' >/dev/null
+  x=$(docker images -q tts-kokoro:0.9.4)
+  if [[ ! $x ]]; then
+    docker build -t tts-kokoro:0.9.4 - <<<'
+      FROM python:3.10
+      RUN apt-get -q -y update
+      RUN apt-get -q -y install espeak-ng
+      RUN pip install kokoro==0.9.4 numpy
+      RUN printf '\''%s\n'\'' \
+        '\''from kokoro import KPipeline'\'' \
+        '\''pipeline = KPipeline(lang_code="a")'\'' \
+        '\''generator = pipeline("hello", voice="af_heart")'\'' \
+        '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
+        '\''  pass'\'' \
+        >/init.py \
+      ;
+      RUN python /init.py
+      RUN printf '\''%s\n'\'' \
+        '\''from kokoro import KPipeline'\'' \
+        '\''import numpy as np'\'' \
+        '\''import sys'\'' \
+        '\''pipeline = KPipeline(lang_code="a")'\'' \
+        '\''generator = pipeline(sys.stdin.read(), voice="af_heart")'\'' \
+        '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
+        '\''  audio_np = np.asarray(audio, dtype=np.float32)'\'' \
+        '\''  sys.stdout.buffer.write(audio_np.tobytes())'\'' \
+        >/run.py \
+      ;
+    ' >&2
+  fi
 
-  f1() {
-    docker run \
-      $TTS_DOCKER_GPUS \
-      --network none \
-      --rm \
-      --stop-timeout 0 \
-      -i \
-      tts-kokoro:0.9.4 \
-      sh -c 'python run.py >/dev/null 2>/dev/null && cat tmp.raw' \
-      <<<"$@" \
-    ;
-  }
-
-  f1 "$input" | play \
-    --bits 16 \
-    --channels 1 \
-    --encoding signed-integer \
-    --endian little \
+  docker run \
+    $TTS_DOCKER_GPUS \
+    --network none \
+    --rm \
+    --stop-timeout 0 \
+    -i \
+    tts-kokoro:0.9.4 \
+    python /run.py \
+    <<<"$input" \
+    2>/dev/null \
+  | play \
     --no-show-progress \
     --norm \
     --rate 24000 \
-    --type .raw \
+    --type .f32 \
     -V1 \
     - \
-    $TTS_RIGHT_PAD \
   ;
 
   exit
