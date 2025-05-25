@@ -54,6 +54,24 @@ else
   input="$@"
 fi
 
+input=$(awk '
+  {
+    if (line != "") {
+      if ($0 == "") {
+        print line;
+        line = "";
+      }
+      line = line " ";
+    }
+    line = line $0;
+  }
+  END {
+    if (line != "") {
+      print line;
+    }
+  }
+' <<<"$input")
+
 if [[ ! ${TTS_HAVE_DOCKER+x} ]]; then
   TTS_HAVE_DOCKER=0
   if command -v docker &>/dev/null; then
