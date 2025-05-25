@@ -48,29 +48,37 @@ case ${1-} in -*)
   exit 1
 esac
 
-if (($# == 0)); then
-  input=$(cat)
-else
-  input="$@"
-fi
+#-----------------------------------------------------------------------
+# Read the input text
+#-----------------------------------------------------------------------
 
-input=$(awk '
+join_lines='
   {
-    if (line != "") {
-      if ($0 == "") {
-        print line;
-        line = "";
+    if ($0) {
+      if (buf) {
+        buf = buf " ";
       }
-      line = line " ";
+      buf = buf $0;
+    } else if (buf) {
+      print buf;
+      buf = "";
     }
-    line = line $0;
   }
   END {
-    if (line != "") {
-      print line;
+    if (buf) {
+      print buf;
     }
   }
-' <<<"$input")
+'
+readonly join_lines
+
+if (($# == 0)); then
+  input=$(awk "$join_lines")
+else
+  input=$(awk "$join_lines" <<<"$@")
+fi
+
+#-----------------------------------------------------------------------
 
 if [[ ! ${TTS_HAVE_DOCKER+x} ]]; then
   TTS_HAVE_DOCKER=0
