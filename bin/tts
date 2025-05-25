@@ -49,7 +49,7 @@ esac
 #-----------------------------------------------------------------------
 
 if [[ ${TTS_ENGINE-} == dotnet || \
-      (!${TTS_ENGINE-} && ${WINDIR-}) ]]; then
+      ( ! ${TTS_ENGINE-} && ${WINDIR-} ) ]]; then
 
   x='
     BEGIN {
