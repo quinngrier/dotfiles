@@ -47,6 +47,12 @@ case ${1-} in -*)
   exit 1
 esac
 
+on_cygwin=0
+if command -v cygcheck &>/dev/null; then
+  on_cygwin=1
+fi
+readonly on_cygwin
+
 #-----------------------------------------------------------------------
 # Read the input text
 #-----------------------------------------------------------------------
@@ -145,6 +151,16 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
     ' >&2
   fi
 
+  pid=
+
+  trap '
+    if [[ $pid ]]; then
+      if ((on_cygwin)); then
+        /bin/kill -f $pid || :
+      fi
+    fi
+  ' SIGINT
+
   docker run \
     $TTS_DOCKER_GPUS \
     --network none \
@@ -162,7 +178,11 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
     --type .f32 \
     -V1 \
     - \
-  ;
+  &
+
+  pid=$!
+
+  wait $pid
 
   exit
 
