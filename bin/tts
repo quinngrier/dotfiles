@@ -162,7 +162,7 @@ fi
 #-----------------------------------------------------------------------
 
 if [[ ${TTS_ENGINE-} == dotnet || \
-      ( ! ${TTS_ENGINE-} && ${WINDIR-} ) ]]; then
+      ( ! ${TTS_ENGINE+x} && ${WINDIR+x} ) ]]; then
 
   x='
     BEGIN {
