@@ -27,11 +27,10 @@
 #
 #    dotnet
 #
-#       This is the SpeechSynthesizer class from the .NET
-#       platform.
+#       This is the SpeechSynthesizer class from .NET.
 #
-#       If you're on Windows, this engine will always be tried as
-#       a last resort.
+#       If you're on Windows and don't have TTS_ENGINE set, this
+#       engine will always be tried as a last resort.
 #
 #    kokoro
 #
