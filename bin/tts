@@ -33,6 +33,10 @@
 #       If you're on Windows, this engine will always be tried as
 #       a last resort.
 #
+#    kokoro
+#
+#       This is <https://github.com/hexgrad/kokoro>.
+#
 
 set -E -e -u -o pipefail || exit $?
 trap exit ERR
@@ -43,6 +47,115 @@ case ${1-} in -*)
   printf '%s\n' "Options are not supported yet." >&2
   exit 1
 esac
+
+if (($# == 0)); then
+  input=$(cat)
+else
+  input="$@"
+fi
+
+if [[ ! ${TTS_HAVE_DOCKER+x} ]]; then
+  TTS_HAVE_DOCKER=0
+  if command -v docker &>/dev/null; then
+    TTS_HAVE_DOCKER=1
+  fi
+fi
+readonly TTS_HAVE_DOCKER
+
+if [[ ! ${TTS_DOCKER_GPUS+x} ]]; then
+  TTS_DOCKER_GPUS=
+  if ((TTS_HAVE_DOCKER)); then
+    if docker run --rm --gpus all hello-world &>/dev/null; then
+      TTS_DOCKER_GPUS='--gpus all'
+    fi
+  fi
+fi
+readonly TTS_DOCKER_GPUS
+
+if [[ ${WINDIR+x} && ! ${AUDIODRIVER+x} ]]; then
+  AUDIODRIVER=waveaudio
+  readonly AUDIODRIVER
+  export AUDIODRIVER
+  if [[ ! ${TTS_RIGHT_PAD+x} ]]; then
+    TTS_RIGHT_PAD='pad 0 1'
+  fi
+fi
+
+if [[ ! ${TTS_RIGHT_PAD+x} ]]; then
+  TTS_RIGHT_PAD=
+fi
+readonly TTS_RIGHT_PAD
+
+export DOCKER_CLI_HINTS=false
+
+#-----------------------------------------------------------------------
+# kokoro
+#-----------------------------------------------------------------------
+
+if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
+
+  docker build -q -t tts-kokoro:0.9.4 - <<<'
+    FROM python:3.10
+    RUN apt-get -q -y update
+    RUN apt-get -q -y install espeak-ng
+    RUN pip install kokoro==0.9.4 soundfile
+    RUN printf '\''%s\n'\'' \
+      '\''from kokoro import KPipeline'\'' \
+      '\''pipeline = KPipeline(lang_code="a")'\'' \
+      '\''generator = pipeline("hello", voice="af_heart")'\'' \
+      '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
+      '\''  pass'\'' \
+      >init.py \
+    ;
+    RUN python init.py
+    RUN printf '\''%s\n'\'' \
+      '\''from kokoro import KPipeline'\'' \
+      '\''import soundfile as sf'\'' \
+      '\''import sys'\'' \
+      '\''pipeline = KPipeline(lang_code="a")'\'' \
+      '\''generator = pipeline(sys.stdin.read(), voice="af_heart")'\'' \
+      '\''with open("tmp.raw", "wb") as raw:'\'' \
+      '\''  for i, (gs, ps, audio) in enumerate(generator):'\'' \
+      '\''    sf.write(raw, audio,'\'' \
+      '\''      closefd=False,'\'' \
+      '\''      format="RAW",'\'' \
+      '\''      samplerate=24000,'\'' \
+      '\''      subtype="PCM_16",'\'' \
+      '\''    )'\'' \
+      >run.py \
+    ;
+  ' >/dev/null
+
+  f1() {
+    docker run \
+      $TTS_DOCKER_GPUS \
+      --network none \
+      --rm \
+      --stop-timeout 0 \
+      -i \
+      tts-kokoro:0.9.4 \
+      sh -c 'python run.py >/dev/null 2>/dev/null && cat tmp.raw' \
+      <<<"$@" \
+    ;
+  }
+
+  f1 "$input" | play \
+    --bits 16 \
+    --channels 1 \
+    --encoding signed-integer \
+    --endian little \
+    --no-show-progress \
+    --norm \
+    --rate 24000 \
+    --type .raw \
+    -V1 \
+    - \
+    $TTS_RIGHT_PAD \
+  ;
+
+  exit
+
+fi
 
 #-----------------------------------------------------------------------
 # .NET
@@ -64,9 +177,9 @@ if [[ ${TTS_ENGINE-} == dotnet || \
     }
   '
   case $# in 0)
-    x=$(awk "$x")
+    input=$(awk "$input")
   ;; *)
-    x=$(awk "$x" <<<"$*")
+    input=$(awk "$input" <<<"$*")
   esac
 
   unset pid
@@ -77,7 +190,7 @@ if [[ ${TTS_ENGINE-} == dotnet || \
   ' INT
   PowerShell -Command - <<EOF &
 Add-Type -AssemblyName System.Speech;
-(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($x);
+(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($input);
 EOF
   pid=$!
   wait $pid
