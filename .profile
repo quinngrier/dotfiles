@@ -16,3 +16,7 @@ PATH=\
 $HOME/bin:\
 $HOME/.cargo/bin:\
 $PATH
+
+if test -f ~/.profile.private; then
+  . ~/.profile.private
+fi
