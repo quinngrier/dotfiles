@@ -20,15 +20,15 @@
 # standard input.
 #
 # By default, this script will try to find and use the best text to
-# speech engine you have available. You can also pick the engine by
-# setting the TTS_ENGINE environment variable.
+# speech engine you have available. To use a specific engine, set the
+# TTS_ENGINE environment variable to one of the engines detailed below.
 #
 # Unless otherwise stated, all engines convert text to speech locally,
 # without accessing the internet. However, the first time you use an
 # engine, it may need to run a one-time build process that requires
 # internet access.
 #
-# The supported text to speech engines are as follows:
+# The supported engines are as follows:
 #
 #    dotnet
 #
