@@ -13,7 +13,7 @@
 #
 # Usage: tts [<word>...]
 #
-# Converts text to speech and plays it.
+# Converts text to speech.
 #
 # If at least one <word> is given, the input is the space-separated
 # concatenation of the <word>s. Otherwise, the input is read from
@@ -22,6 +22,11 @@
 # By default, this script will try to find and use the best text to
 # speech engine you have available. To use a specific engine, set the
 # TTS_ENGINE environment variable to one of the engines detailed below.
+#
+# By default, the speech is played aloud using your sound card. To save
+# it to a WAV file instead, set the TTS_OUTFILE environment variable to
+# a file path. To output the WAV file to standard output instead, set
+# TTS_OUTFILE to "-".
 #
 # Unless otherwise stated, all engines convert text to speech locally,
 # without accessing the internet. However, the first time you use an
@@ -166,6 +171,14 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
     fi
   ' SIGINT
 
+  if [[ ${TTS_OUTFILE+x} ]]; then
+    x1='--type wav --'
+    x2=$TTS_OUTFILE
+  else
+    x1=
+    x2=--default-device
+  fi
+
   docker run \
     $TTS_DOCKER_GPUS \
     --network none \
@@ -176,13 +189,15 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
     python /run.py \
     <<<"$input" \
     2>/dev/null \
-  | play \
+  | sox \
     --no-show-progress \
     --norm \
     --rate 24000 \
     --type .f32 \
     -V1 \
     - \
+    $x1 \
+    "$x2" \
   &
 
   pid=$!
@@ -199,6 +214,11 @@ fi
 
 if [[ ${TTS_ENGINE-} == dotnet || \
       ( ! ${TTS_ENGINE+x} && ${WINDIR+x} ) ]]; then
+
+  if [[ ${TTS_OUTFILE+x} ]]; then
+    printf '%s\n' "TTS_OUTFILE is not supported for this engine yet." >&2
+    exit 1
+  fi
 
   x='
     BEGIN {
