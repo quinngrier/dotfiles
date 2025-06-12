@@ -35,6 +35,10 @@
 #
 # The supported engines are as follows:
 #
+#    chatterbox
+#
+#       This is <https://github.com/resemble-ai/chatterbox>.
+#
 #    dotnet
 #
 #       This is the SpeechSynthesizer class from .NET.
@@ -117,6 +121,99 @@ if [[ ${WINDIR+x} && ! ${AUDIODRIVER+x} ]]; then
   AUDIODRIVER=waveaudio
   readonly AUDIODRIVER
   export AUDIODRIVER
+fi
+
+#-----------------------------------------------------------------------
+# chatterbox
+#-----------------------------------------------------------------------
+
+if [[ ${TTS_ENGINE-} == chatterbox ]]; then
+
+  if [[ ! $TTS_DOCKER_GPUS ]]; then
+    printf '%s\n' "$0: TTS_ENGINE=chatterbox requires TTS_DOCKER_GPUS." >&2
+    exit 1
+  fi
+
+  x=$(docker images -q tts-chatterbox)
+  if [[ ! $x ]]; then
+    docker build -t tts-chatterbox.tmp - <<<'
+      FROM python:3.9
+      RUN pip install chatterbox-tts==0.1.1
+      RUN printf '\''%s\n'\'' \
+        '\''from chatterbox.tts import ChatterboxTTS'\'' \
+        '\''from contextlib import redirect_stdout'\'' \
+        '\''import os'\'' \
+        '\''import sys'\'' \
+        '\''text = sys.stdin.read()'\'' \
+        '\''with open(os.devnull, "w") as f, redirect_stdout(f):'\'' \
+        '\''  model = ChatterboxTTS.from_pretrained(device="cuda")'\'' \
+        '\''  speech = model.generate(text, cfg_weight=0.3)'\'' \
+        '\''speech = speech.cpu().numpy().tobytes()'\'' \
+        '\''sys.stdout.buffer.write(speech)'\'' \
+        >/run.py \
+      ;
+    ' >&2
+    docker rm -f tts-chatterbox.tmp
+    docker run \
+      $TTS_DOCKER_GPUS \
+      --name tts-chatterbox.tmp \
+      --stop-timeout 0 \
+      -i \
+      tts-chatterbox.tmp \
+      python /run.py \
+      <<<"hello" \
+      >/dev/null \
+    ;
+    docker commit tts-chatterbox.tmp tts-chatterbox
+    docker rm tts-chatterbox.tmp
+    docker rmi tts-chatterbox.tmp
+  fi
+
+  pid=
+
+  trap '
+    if [[ $pid ]]; then
+      if ((on_cygwin)); then
+        /bin/kill -f $pid || :
+      fi
+    fi
+  ' SIGINT
+
+  if [[ ${TTS_OUTFILE+x} ]]; then
+    x1='--type wav --'
+    x2=$TTS_OUTFILE
+  else
+    x1=
+    x2=--default-device
+  fi
+
+  docker run \
+    $TTS_DOCKER_GPUS \
+    --network none \
+    --rm \
+    --stop-timeout 0 \
+    -i \
+    tts-chatterbox \
+    python /run.py \
+    <<<"$input" \
+    2>/dev/null \
+  | sox \
+    --no-show-progress \
+    --norm \
+    --rate 24000 \
+    --type .f32 \
+    -V1 \
+    - \
+    $x1 \
+    "$x2" \
+  &
+
+  pid=$!
+
+  wait $pid
+
+  exit
+
 fi
 
 #-----------------------------------------------------------------------
