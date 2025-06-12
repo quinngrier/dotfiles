@@ -109,7 +109,7 @@ readonly TTS_HAVE_DOCKER
 
 if [[ ! ${TTS_DOCKER_GPUS+x} ]]; then
   TTS_DOCKER_GPUS=
-  if ((TTS_HAVE_DOCKER)); then
+  if [[ $TTS_HAVE_DOCKER == 1 ]]; then
     if docker run --rm --gpus all hello-world &>/dev/null; then
       TTS_DOCKER_GPUS='--gpus all'
     fi
