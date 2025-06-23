@@ -10,4 +10,4 @@
 
 source $HOME/.vim/after/ftplugin/_common.vim
 
-setlocal comments=s1:/*!,mb:*,ex:*/,s1:/*,mb:*,ex:*/,:///,://!,://
+let &l:comments = 's1:/*!,mb:*,ex:*/,s1:/*,mb:*,ex:*/,:///,://!,://'

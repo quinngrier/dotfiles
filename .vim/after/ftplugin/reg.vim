@@ -10,4 +10,4 @@
 
 source $HOME/.vim/after/ftplugin/_common.vim
 
-setlocal comments=:;
+let &l:comments = ':;'

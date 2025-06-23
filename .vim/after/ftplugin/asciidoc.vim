@@ -10,6 +10,6 @@
 
 source $HOME/.vim/after/ftplugin/_common.vim
 
-setlocal comments=://
+let &l:comments = '://'
 
 let &l:formatlistpat = '\v\c^\s*todo:\s+'
