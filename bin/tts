@@ -25,13 +25,12 @@
 #
 # By default, the speech is played aloud using your sound card. To save
 # it to a WAV file instead, set the TTS_OUTFILE environment variable to
-# a file path. To output the WAV file to standard output instead, set
+# a file path. To output the WAV file directly to standard output, set
 # TTS_OUTFILE to "-".
 #
-# Unless otherwise stated, all engines convert text to speech locally,
-# without accessing the internet. However, the first time you use an
-# engine, it may need to run a one-time build process that requires
-# internet access.
+# Unless otherwise stated, all engines are run locally without internet
+# access. However, the first time you use an engine, it may need to run
+# a one-time build process that accesses the internet.
 #
 # The supported engines are as follows:
 #
