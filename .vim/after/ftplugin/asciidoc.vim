@@ -11,3 +11,5 @@
 source $HOME/.vim/after/ftplugin/_common.vim
 
 setlocal comments=://
+
+let &l:formatlistpat = '\v\c^\s*todo:\s+'
