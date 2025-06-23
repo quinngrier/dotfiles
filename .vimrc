@@ -212,15 +212,9 @@ autocmd vimrc BufEnter *
   \ setlocal formatoptions=nq
 
 autocmd vimrc BufEnter *
-  \ setlocal formatlistpat=\\v\\c^\\s*
-                           \([*-]
-                          \\|(0
-                           \\|[1-9][0-9]?
-                           \\|[a-z]
-                           \\|x?x?(v?ii?i?\|i?[vx])
-                            \)\\.
-                          \\|todo:
-                           \)\\s+
+  \ if empty(&filetype) |
+  \   let &l:formatlistpat='\v\c^\s*([*-]|\d+\.|todo:)\s+' |
+  \ endif
 
 function! Gq(visual)
   const l:old_autoindent = &autoindent
