@@ -8,6 +8,6 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
-source $HOME/.vim/after/ftplugin/common.vim
+source $HOME/.vim/after/ftplugin/_common.vim
 
 setlocal comments=:\\"
