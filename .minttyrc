@@ -8,7 +8,7 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-BackgroundColour=19,19,25
+BackgroundColour=17,17,34
 BoldAsFont=yes
 BoldWhite=255,255,255
 Charset=UTF-8
@@ -17,11 +17,11 @@ CopyOnSelect=no
 CursorType=block
 Font=Cascadia Mono
 FontHeight=14
-ForegroundColour=232,232,232
+ForegroundColour=238,238,238
 Locale=C
 MiddleClickAction=void
 ScrollbackLines=1000000
 SearchBackgroundColour=191,0,191
 SearchCurrentColour=191,191,0
 Term=xterm
-White=232,232,232
+White=238,238,238
