@@ -13,16 +13,16 @@
 #       should have standard options parsing long term.
 
 #
-# Amazon says the following:
+# Amazon says the following [1]:
 #
 #       Ensure that your custom credential tool does not write any
 #       secret information to StdErr because the SDKs and AWS CLI
 #       can capture and log such information, potentially exposing
 #       it to unauthorized users.
 #
-#       (Source: <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html>)
-#
 # For sanity, we'll just never output anything to stderr.
+#
+# [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html
 #
 
 exec 2>/dev/null
