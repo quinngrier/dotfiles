@@ -59,8 +59,8 @@
 
 set -E -e -u -o pipefail || exit $?
 trap exit ERR
-
 declare -r -x LC_ALL=C
+unset IFS
 
 case ${1-} in -*)
   printf '%s\n' "Options are not supported yet." >&2
@@ -76,10 +76,21 @@ readonly on_cygwin
 #-----------------------------------------------------------------------
 # Read the input text
 #-----------------------------------------------------------------------
+#
+# Some engines pause on newlines or can't handle long input very well.
+# To fix this, we join each run of nonempty lines into a single line and
+# parse the resulting lines into an array to feed into the engine one at
+# a time. We also remove comment leaders like # and //.
+#
 
-join_lines='
+adjust_input='
   {
     if ($0) {
+      if (/^ *# /) {
+        sub(/^ *# */, "");
+      } else if (/^ *\/\/ /) {
+        sub(/^ *\/\/ */, "");
+      }
       if (buf) {
         buf = buf " ";
       }
@@ -95,13 +106,16 @@ join_lines='
     }
   }
 '
-readonly join_lines
+readonly adjust_input
 
+IFS=$'\n'
 if (($# == 0)); then
-  input=$(awk "$join_lines")
+  input_lines=($(awk "$adjust_input"))
 else
-  input=$(awk "$join_lines" <<<"$@")
+  input_lines=($(awk "$adjust_input" <<<"$@"))
 fi
+unset IFS
+readonly input_lines
 
 #-----------------------------------------------------------------------
 
@@ -193,17 +207,19 @@ if [[ ${TTS_ENGINE-} == chatterbox ]]; then
     x2=--default-device
   fi
 
-  docker run \
-    $TTS_DOCKER_GPUS \
-    --network none \
-    --rm \
-    --stop-timeout 0 \
-    -i \
-    tts-chatterbox \
-    python /run.py \
-    <<<"$input" \
-    2>/dev/null \
-  | sox \
+  for input_line in "${input_lines[@]}"; do
+    docker run \
+      $TTS_DOCKER_GPUS \
+      --network none \
+      --rm \
+      --stop-timeout 0 \
+      -i \
+      tts-chatterbox \
+      python /run.py \
+      <<<"$input_line" \
+      2>/dev/null \
+    ;
+  done | sox \
     --no-show-progress \
     --norm \
     --rate 24000 \
@@ -250,15 +266,19 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
       RUN printf '\''%s\n'\'' \
         '\''from kokoro import KPipeline'\'' \
         '\''import numpy as np'\'' \
+        '\''import os'\'' \
         '\''import sys'\'' \
+        '\''stdout = sys.stdout'\'' \
+        '\''sys.stdout = open(os.devnull, "w")'\'' \
         '\''pipeline = KPipeline(lang_code="a")'\'' \
         '\''generator = pipeline(sys.stdin.read(),'\'' \
         '\''  speed=1.25,'\'' \
         '\''  voice="af_heart",'\'' \
         '\'')'\'' \
         '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
-        '\''  audio_np = np.asarray(audio, dtype=np.float32)'\'' \
-        '\''  sys.stdout.buffer.write(audio_np.tobytes())'\'' \
+        '\''  audio = np.asarray(audio, dtype=np.float32)'\'' \
+        '\''  audio = audio.tobytes()'\'' \
+        '\''  stdout.buffer.write(audio)'\'' \
         >/run.py \
       ;
     ' >&2
@@ -282,17 +302,19 @@ if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
     x2=--default-device
   fi
 
-  docker run \
-    $TTS_DOCKER_GPUS \
-    --network none \
-    --rm \
-    --stop-timeout 0 \
-    -i \
-    tts-kokoro:0.9.4 \
-    python /run.py \
-    <<<"$input" \
-    2>/dev/null \
-  | sox \
+  for input_line in "${input_lines[@]}"; do
+    docker run \
+      $TTS_DOCKER_GPUS \
+      --network none \
+      --rm \
+      --stop-timeout 0 \
+      -i \
+      tts-kokoro:0.9.4 \
+      python /run.py \
+      <<<"$input_line" \
+      2>/dev/null \
+    ;
+  done | sox \
     --no-show-progress \
     --norm \
     --rate 24000 \
@@ -323,23 +345,20 @@ if [[ ${TTS_ENGINE-} == dotnet || \
     exit 1
   fi
 
-  x='
-    BEGIN {
-      q = "'\''";
-    }
-    {
-      if (NR > 1) {
-        printf "%s", " + \"`r`n\" + "
+  x=$(
+    awk '
+      BEGIN {
+        q = "'\''";
       }
-      gsub(/'\''/, q q);
-      printf "%s", q $0 q;
-    }
-  '
-  case $# in 0)
-    input=$(awk "$input")
-  ;; *)
-    input=$(awk "$input" <<<"$*")
-  esac
+      {
+        if (NR > 1) {
+          printf "%s", " + \"`r`n\" + "
+        }
+        gsub(/'\''/, q q);
+        printf "%s", q $0 q;
+      }
+    ' <<<"${input_lines[@]}"
+  )
 
   unset pid
   trap '
@@ -349,7 +368,7 @@ if [[ ${TTS_ENGINE-} == dotnet || \
   ' INT
   PowerShell -Command - <<EOF &
 Add-Type -AssemblyName System.Speech;
-(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($input);
+(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($x);
 EOF
   pid=$!
   wait $pid
