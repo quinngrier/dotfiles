@@ -74,6 +74,50 @@ fi
 readonly on_cygwin
 
 #-----------------------------------------------------------------------
+# Create a temporary directory
+#-----------------------------------------------------------------------
+
+if tmpdir=$(mktemp -d 2>/dev/null); then
+  if [[ ${tmpdir:0:1} != / ]]; then
+    if [[ ${PWD: -1:1} == / ]]; then
+      tmpdir=$PWD$tmpdir
+    else
+      tmpdir=$PWD/$tmpdir
+    fi
+  fi
+  if [[ ${tmpdir: -1:1} == / ]]; then
+    tmpdir+=.
+  fi
+else
+  tmpdir=${TMPDIR:-/tmp}
+  if [[ ${tmpdir:0:1} != / ]]; then
+    if [[ ${PWD: -1:1} == / ]]; then
+      tmpdir=$PWD$tmpdir
+    else
+      tmpdir=$PWD/$tmpdir
+    fi
+  fi
+  mkdir -p "$tmpdir"
+  if [[ ${tmpdir: -1:1} != / ]]; then
+    tmpdir+=/
+  fi
+  tmpdir+=tmp.
+  x=bcdfghjklmnpqrstvwxyz
+  for ((i = 0; i < 10; ++i)); do
+    tmpdir+=${x:RANDOM % ${#x}:1}
+  done
+  mkdir "$tmpdir"
+fi
+chmod 700 "$tmpdir"
+readonly tmpdir
+
+trap '
+  readonly exit_status=$?
+  rm -f -r "$tmpdir" || :
+  exit $exit_status
+' EXIT
+
+#-----------------------------------------------------------------------
 # Read the input text
 #-----------------------------------------------------------------------
 #
