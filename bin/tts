@@ -242,7 +242,8 @@ fi
 # kokoro
 #-----------------------------------------------------------------------
 
-if [[ ${TTS_ENGINE-} == kokoro || $TTS_HAVE_DOCKER == 1 ]]; then
+if [[ ${TTS_ENGINE-} == kokoro || \
+      ( ! ${TTS_ENGINE+x} && $TTS_HAVE_DOCKER == 1 ) ]]; then
 
   x=$(docker images -q tts-kokoro:0.9.4)
   if [[ ! $x ]]; then
