@@ -42,7 +42,12 @@
 #
 #    dotnet
 #
-#       This is the SpeechSynthesizer class from .NET.
+#       This is the SpeechSynthesizer class from .NET, run
+#       directly on your host machine using PowerShell.
+#
+#       It's unlikely that this engine will ever access the
+#       internet, but it's still just a .NET call on your host
+#       machine. Use at your own risk.
 #
 #       If you're on Windows and don't have TTS_ENGINE set, this
 #       engine will always be tried as a last resort.
