@@ -42,13 +42,13 @@ files='
   bin/gpgsec-aws
   bin/https-server
   bin/jqbc
+  bin/qtts
   bin/s
   bin/ssh-autokey
   bin/ssh-keygen
   bin/sshqg
   bin/sshqg-gpgsec
   bin/tfdata
-  bin/tts
   deploy
   gitlab.gitconfig
   reg/classic-right-click.reg

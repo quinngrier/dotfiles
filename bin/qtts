@@ -1,4 +1,4 @@
-#! /bin/bash -
+#! /usr/bin/env bash
 
 #
 # The authors of this file have waived all copyright and
@@ -11,7 +11,7 @@
 #
 
 #
-# Usage: tts [<word>...]
+# Usage: qtts [<word>...]
 #
 # Converts text to speech.
 #
@@ -21,12 +21,12 @@
 #
 # By default, this script will try to find and use the best text to
 # speech engine you have available. To use a specific engine, set the
-# TTS_ENGINE environment variable to one of the engines detailed below.
+# QTTS_ENGINE environment variable to one of the engines detailed below.
 #
 # By default, the speech is played aloud using your sound card. To save
-# it to a WAV file instead, set the TTS_OUTFILE environment variable to
+# it to a WAV file instead, set the QTTS_OUTFILE environment variable to
 # a file path. To output the WAV file directly to standard output, set
-# TTS_OUTFILE to "-".
+# QTTS_OUTFILE to "-".
 #
 # Unless otherwise stated, all engines are run locally inside a Docker
 # container with internet access disabled. However, the first time you
@@ -49,7 +49,7 @@
 #       internet, but it's still just a .NET call on your host
 #       machine. Use at your own risk.
 #
-#       If you're on Windows and don't have TTS_ENGINE set, this
+#       If you're on Windows and don't have QTTS_ENGINE set, this
 #       engine will always be tried as a last resort.
 #
 #    kokoro
@@ -163,23 +163,23 @@ readonly input_lines
 
 #-----------------------------------------------------------------------
 
-if [[ ! ${TTS_HAVE_DOCKER+x} ]]; then
-  TTS_HAVE_DOCKER=0
+if [[ ! ${QTTS_HAVE_DOCKER+x} ]]; then
+  QTTS_HAVE_DOCKER=0
   if command -v docker &>/dev/null; then
-    TTS_HAVE_DOCKER=1
+    QTTS_HAVE_DOCKER=1
   fi
 fi
-readonly TTS_HAVE_DOCKER
+readonly QTTS_HAVE_DOCKER
 
-if [[ ! ${TTS_DOCKER_GPUS+x} ]]; then
-  TTS_DOCKER_GPUS=
-  if [[ $TTS_HAVE_DOCKER == 1 ]]; then
+if [[ ! ${QTTS_DOCKER_GPUS+x} ]]; then
+  QTTS_DOCKER_GPUS=
+  if [[ $QTTS_HAVE_DOCKER == 1 ]]; then
     if docker run --rm --gpus all hello-world &>/dev/null; then
-      TTS_DOCKER_GPUS='--gpus all'
+      QTTS_DOCKER_GPUS='--gpus all'
     fi
   fi
 fi
-readonly TTS_DOCKER_GPUS
+readonly QTTS_DOCKER_GPUS
 
 if [[ ${WINDIR+x} && ! ${AUDIODRIVER+x} ]]; then
   AUDIODRIVER=waveaudio
@@ -191,16 +191,16 @@ fi
 # chatterbox
 #-----------------------------------------------------------------------
 
-if [[ ${TTS_ENGINE-} == chatterbox ]]; then
+if [[ ${QTTS_ENGINE-} == chatterbox ]]; then
 
-  if [[ ! $TTS_DOCKER_GPUS ]]; then
-    printf '%s\n' "$0: TTS_ENGINE=chatterbox requires TTS_DOCKER_GPUS." >&2
+  if [[ ! $QTTS_DOCKER_GPUS ]]; then
+    printf '%s\n' "$0: QTTS_ENGINE=chatterbox requires QTTS_DOCKER_GPUS." >&2
     exit 1
   fi
 
-  x=$(docker images -q tts-chatterbox)
+  x=$(docker images -q qtts-chatterbox)
   if [[ ! $x ]]; then
-    docker build -t tts-chatterbox.tmp - <<<'
+    docker build -t qtts-chatterbox.tmp - <<<'
       FROM python:3.9
       RUN pip install chatterbox-tts==0.1.1
       RUN printf '\''%s\n'\'' \
@@ -217,20 +217,20 @@ if [[ ${TTS_ENGINE-} == chatterbox ]]; then
         >/run.py \
       ;
     ' >&2
-    docker rm -f tts-chatterbox.tmp
+    docker rm -f qtts-chatterbox.tmp
     docker run \
-      $TTS_DOCKER_GPUS \
-      --name tts-chatterbox.tmp \
+      $QTTS_DOCKER_GPUS \
+      --name qtts-chatterbox.tmp \
       --stop-timeout 0 \
       -i \
-      tts-chatterbox.tmp \
+      qtts-chatterbox.tmp \
       python /run.py \
       <<<"hello" \
       >/dev/null \
     ;
-    docker commit tts-chatterbox.tmp tts-chatterbox
-    docker rm tts-chatterbox.tmp
-    docker rmi tts-chatterbox.tmp
+    docker commit qtts-chatterbox.tmp qtts-chatterbox
+    docker rm qtts-chatterbox.tmp
+    docker rmi qtts-chatterbox.tmp
   fi
 
   pid=
@@ -243,9 +243,9 @@ if [[ ${TTS_ENGINE-} == chatterbox ]]; then
     fi
   ' SIGINT
 
-  if [[ ${TTS_OUTFILE+x} ]]; then
+  if [[ ${QTTS_OUTFILE+x} ]]; then
     x1='--type wav --'
-    x2=$TTS_OUTFILE
+    x2=$QTTS_OUTFILE
   else
     x1=
     x2=--default-device
@@ -253,12 +253,12 @@ if [[ ${TTS_ENGINE-} == chatterbox ]]; then
 
   for input_line in "${input_lines[@]}"; do
     docker run \
-      $TTS_DOCKER_GPUS \
+      $QTTS_DOCKER_GPUS \
       --network none \
       --rm \
       --stop-timeout 0 \
       -i \
-      tts-chatterbox \
+      qtts-chatterbox \
       python /run.py \
       <<<"$input_line" \
       2>/dev/null \
@@ -286,12 +286,12 @@ fi
 # kokoro
 #-----------------------------------------------------------------------
 
-if [[ ${TTS_ENGINE-} == kokoro || \
-      ( ! ${TTS_ENGINE+x} && $TTS_HAVE_DOCKER == 1 ) ]]; then
+if [[ ${QTTS_ENGINE-} == kokoro || \
+      ( ! ${QTTS_ENGINE+x} && $QTTS_HAVE_DOCKER == 1 ) ]]; then
 
-  x=$(docker images -q tts-kokoro:0.9.4)
+  x=$(docker images -q qtts-kokoro:0.9.4)
   if [[ ! $x ]]; then
-    docker build -t tts-kokoro:0.9.4 - <<<'
+    docker build -t qtts-kokoro:0.9.4 - <<<'
       FROM python:3.10
       RUN apt-get -q -y update
       RUN apt-get -q -y install espeak-ng
@@ -339,9 +339,9 @@ if [[ ${TTS_ENGINE-} == kokoro || \
     fi
   ' SIGINT
 
-  if [[ ${TTS_OUTFILE+x} ]]; then
+  if [[ ${QTTS_OUTFILE+x} ]]; then
     x1='--type wav --'
-    x2=$TTS_OUTFILE
+    x2=$QTTS_OUTFILE
   else
     x1=
     x2=--default-device
@@ -349,12 +349,12 @@ if [[ ${TTS_ENGINE-} == kokoro || \
 
   for input_line in "${input_lines[@]}"; do
     docker run \
-      $TTS_DOCKER_GPUS \
+      $QTTS_DOCKER_GPUS \
       --network none \
       --rm \
       --stop-timeout 0 \
       -i \
-      tts-kokoro:0.9.4 \
+      qtts-kokoro:0.9.4 \
       python /run.py \
       <<<"$input_line" \
       2>/dev/null \
@@ -382,11 +382,11 @@ fi
 # .NET
 #-----------------------------------------------------------------------
 
-if [[ ${TTS_ENGINE-} == dotnet || \
-      ( ! ${TTS_ENGINE+x} && ${WINDIR+x} ) ]]; then
+if [[ ${QTTS_ENGINE-} == dotnet || \
+      ( ! ${QTTS_ENGINE+x} && ${WINDIR+x} ) ]]; then
 
-  if [[ ${TTS_OUTFILE+x} ]]; then
-    printf '%s\n' "TTS_OUTFILE is not supported for this engine yet." >&2
+  if [[ ${QTTS_OUTFILE+x} ]]; then
+    printf '%s\n' "QTTS_OUTFILE is not supported for this engine yet." >&2
     exit 1
   fi
 
