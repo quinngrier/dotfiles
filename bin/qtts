@@ -24,9 +24,9 @@
 # QTTS_ENGINE environment variable to one of the engines detailed below.
 #
 # By default, the speech is played aloud using your sound card. To save
-# it to a WAV file instead, set the QTTS_OUTFILE environment variable to
-# a file path. To output the WAV file directly to standard output, set
-# QTTS_OUTFILE to "-".
+# it to an audio file instead, set the QTTS_OUTFILE environment variable
+# to a file path. The output file format will be inferred from the file
+# extension (.wav, .ogg, .m4a, etc).
 #
 # Unless otherwise stated, all engines are run locally inside a Docker
 # container with internet access disabled. However, the first time you
@@ -181,12 +181,6 @@ if [[ ! ${QTTS_DOCKER_GPUS+x} ]]; then
 fi
 readonly QTTS_DOCKER_GPUS
 
-if [[ ${WINDIR+x} && ! ${AUDIODRIVER+x} ]]; then
-  AUDIODRIVER=waveaudio
-  readonly AUDIODRIVER
-  export AUDIODRIVER
-fi
-
 #-----------------------------------------------------------------------
 # chatterbox
 #-----------------------------------------------------------------------
@@ -234,24 +228,36 @@ if [[ ${QTTS_ENGINE-} == chatterbox ]]; then
   fi
 
   pid=
-
   trap '
     if [[ $pid ]]; then
-      if ((on_cygwin)); then
-        /bin/kill -f $pid || :
-      fi
+      kill $pid || :
     fi
   ' SIGINT
 
-  if [[ ${QTTS_OUTFILE+x} ]]; then
-    x1='--type wav --'
-    x2=$QTTS_OUTFILE
-  else
-    x1=
-    x2=--default-device
+  if [[ ! ${QTTS_OUTFILE+x} ]]; then
+    (
+      cd "$tmpdir"
+      for ((i = 0; i < ${#input_lines[@]}; ++i)); do
+        while [[ ! -f $i.raw ]]; do
+          sleep 0.2
+        done
+        ffplay \
+          -loglevel fatal \
+          -nodisp \
+          -autoexit \
+          -f f32le \
+          -ar 24000 \
+          -ch_layout mono \
+          -i $i.raw \
+          >/dev/null \
+        ;
+      done
+    ) &
+    pid=$!
   fi
 
-  for input_line in "${input_lines[@]}"; do
+  pushd "$tmpdir" >/dev/null
+  for ((i = 0; i < ${#input_lines[@]}; ++i)); do
     docker run \
       $QTTS_DOCKER_GPUS \
       --network none \
@@ -260,23 +266,34 @@ if [[ ${QTTS_ENGINE-} == chatterbox ]]; then
       -i \
       qtts-chatterbox \
       python /run.py \
-      <<<"$input_line" \
+      <<<"${input_lines[i]}" \
+      >$i.raw.tmp \
       2>/dev/null \
     ;
-  done | sox \
-    --no-show-progress \
-    --norm \
-    --rate 24000 \
-    --type .f32 \
-    -V1 \
-    - \
-    $x1 \
-    "$x2" \
-  &
+    mv -f $i.raw.tmp $i.raw
+  done
+  popd >/dev/null
 
-  pid=$!
-
-  wait $pid
+  if [[ ${QTTS_OUTFILE+x} ]]; then
+    srcs=
+    for ((i = 0; i < ${#input_lines[@]}; ++i)); do
+      srcs+=" $i.raw"
+    done
+    pushd "$tmpdir" >/dev/null
+    dst=dst.${QTTS_OUTFILE##*/}
+    cat $srcs | ffmpeg \
+      -loglevel fatal \
+      -f f32le \
+      -ar 24000 \
+      -ch_layout mono \
+      -i - \
+      "$dst" \
+    ;
+    popd >/dev/null
+    mv -f "$tmpdir/$dst" "$QTTS_OUTFILE"
+  else
+    wait $pid
+  fi
 
   exit
 
@@ -289,90 +306,80 @@ fi
 if [[ ${QTTS_ENGINE-} == kokoro || \
       ( ! ${QTTS_ENGINE+x} && $QTTS_HAVE_DOCKER == 1 ) ]]; then
 
-  x=$(docker images -q qtts-kokoro:0.9.4)
+  : ${QTTS_KOKORO_IMAGE:=quinngrier/qtts-kokoro}
+
+  x=$(docker images -q "$QTTS_KOKORO_IMAGE")
   if [[ ! $x ]]; then
-    docker build -t qtts-kokoro:0.9.4 - <<<'
-      FROM python:3.10
-      RUN apt-get -q -y update
-      RUN apt-get -q -y install espeak-ng
-      RUN pip install kokoro==0.9.4 numpy
-      RUN printf '\''%s\n'\'' \
-        '\''from kokoro import KPipeline'\'' \
-        '\''pipeline = KPipeline(lang_code="a")'\'' \
-        '\''generator = pipeline("hello",'\'' \
-        '\''  speed=1.25,'\'' \
-        '\''  voice="af_heart",'\'' \
-        '\'')'\'' \
-        '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
-        '\''  pass'\'' \
-        >/init.py \
-      ;
-      RUN python /init.py
-      RUN printf '\''%s\n'\'' \
-        '\''from kokoro import KPipeline'\'' \
-        '\''import numpy as np'\'' \
-        '\''import os'\'' \
-        '\''import sys'\'' \
-        '\''stdout = sys.stdout'\'' \
-        '\''sys.stdout = open(os.devnull, "w")'\'' \
-        '\''pipeline = KPipeline(lang_code="a")'\'' \
-        '\''generator = pipeline(sys.stdin.read(),'\'' \
-        '\''  speed=1.25,'\'' \
-        '\''  voice="af_heart",'\'' \
-        '\'')'\'' \
-        '\''for i, (gs, ps, audio) in enumerate(generator):'\'' \
-        '\''  audio = np.asarray(audio, dtype=np.float32)'\'' \
-        '\''  audio = audio.tobytes()'\'' \
-        '\''  stdout.buffer.write(audio)'\'' \
-        >/run.py \
-      ;
-    ' >&2
+    docker pull "$QTTS_KOKORO_IMAGE" >&2
   fi
 
   pid=
-
   trap '
     if [[ $pid ]]; then
-      if ((on_cygwin)); then
-        /bin/kill -f $pid || :
-      fi
+      kill $pid || :
     fi
   ' SIGINT
 
-  if [[ ${QTTS_OUTFILE+x} ]]; then
-    x1='--type wav --'
-    x2=$QTTS_OUTFILE
-  else
-    x1=
-    x2=--default-device
+  if [[ ! ${QTTS_OUTFILE+x} ]]; then
+    (
+      cd "$tmpdir"
+      for ((i = 0; i < ${#input_lines[@]}; ++i)); do
+        while [[ ! -f $i.raw ]]; do
+          sleep 0.2
+        done
+        ffplay \
+          -loglevel fatal \
+          -nodisp \
+          -autoexit \
+          -f f32le \
+          -ar 24000 \
+          -ch_layout mono \
+          -i $i.raw \
+          >/dev/null \
+        ;
+      done
+    ) &
+    pid=$!
   fi
 
-  for input_line in "${input_lines[@]}"; do
+  pushd "$tmpdir" >/dev/null
+  for ((i = 0; i < ${#input_lines[@]}; ++i)); do
     docker run \
       $QTTS_DOCKER_GPUS \
       --network none \
       --rm \
       --stop-timeout 0 \
       -i \
-      qtts-kokoro:0.9.4 \
-      python /run.py \
-      <<<"$input_line" \
+      "$QTTS_KOKORO_IMAGE" \
+      python /main.py \
+      <<<"${input_lines[i]}" \
+      >$i.raw.tmp \
       2>/dev/null \
     ;
-  done | sox \
-    --no-show-progress \
-    --norm \
-    --rate 24000 \
-    --type .f32 \
-    -V1 \
-    - \
-    $x1 \
-    "$x2" \
-  &
+    mv -f $i.raw.tmp $i.raw
+  done
+  popd >/dev/null
 
-  pid=$!
-
-  wait $pid
+  if [[ ${QTTS_OUTFILE+x} ]]; then
+    srcs=
+    for ((i = 0; i < ${#input_lines[@]}; ++i)); do
+      srcs+=" $i.raw"
+    done
+    pushd "$tmpdir" >/dev/null
+    dst=dst.${QTTS_OUTFILE##*/}
+    cat $srcs | ffmpeg \
+      -loglevel fatal \
+      -f f32le \
+      -ar 24000 \
+      -ch_layout mono \
+      -i - \
+      "$dst" \
+    ;
+    popd >/dev/null
+    mv -f "$tmpdir/$dst" "$QTTS_OUTFILE"
+  else
+    wait $pid
+  fi
 
   exit
 
