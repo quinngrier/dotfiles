@@ -8,7 +8,7 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-BackgroundColour=17,17,34
+BackgroundColour=17,17,17
 BoldAsFont=yes
 BoldWhite=255,255,255
 Charset=UTF-8
