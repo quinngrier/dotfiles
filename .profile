@@ -15,6 +15,7 @@ export GREP_COLORS
 PATH=\
 $HOME/bin:\
 $HOME/.cargo/bin:\
+$HOME/.local/bin:\
 $PATH
 
 if test -f ~/.profile.private; then
