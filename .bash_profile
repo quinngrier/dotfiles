@@ -74,18 +74,6 @@ unset x
 . ~/.profile
 
 #-----------------------------------------------------------------------
-
-if VISUAL=$(command -v vim); then
-  export VISUAL
-elif VISUAL=$(command -v vi); then
-  export VISUAL
-elif VISUAL=$(command -v nano); then
-  export VISUAL
-else
-  unset VISUAL
-fi
-
-#-----------------------------------------------------------------------
 # Make Docker show plain output by default
 #-----------------------------------------------------------------------
 

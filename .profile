@@ -8,6 +8,26 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+if command -v vim >/dev/null 2>/dev/null; then
+  EDITOR=vim
+  EDITOR_BOTTOM=+
+  export EDITOR
+  export EDITOR_BOTTOM
+else
+  unset EDITOR
+  unset EDITOR_BOTTOM
+fi
+
+if ${EDITOR+:} false; then
+  VISUAL=${EDITOR?}
+  VISUAL_BOTTOM=${EDITOR_BOTTOM?}
+  export VISUAL
+  export VISUAL_BOTTOM
+else
+  unset VISUAL
+  unset VISUAL_BOTTOM
+fi
+
 unset GREP_COLORS
 GREP_COLORS='mt=45'
 export GREP_COLORS
