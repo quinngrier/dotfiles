@@ -1,0 +1,128 @@
+#! /usr/bin/env bash
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+set -E -e -u -o pipefail || exit $?
+trap exit ERR
+
+if (($# > 0)); then
+  printf '%s\n' "Arguments are not supported yet." >&2
+  exit 1
+fi
+
+editor="${EDITOR-vi} ${EDITOR_BOTTOM-}"
+gawk=gawk
+
+bearer=$(gcloud auth print-access-token)
+project=$(gcloud config get-value project)
+location=us-central1
+
+# Listed in Google Cloud's web UI under Vertex AI > Model Garden.
+model=publishers/google/models/gemini-2.5-flash
+#model=publishers/google/models/gemini-2.5-pro
+
+user_heading='% User -----------------------------------------------------------------'
+model_heading='% Model ----------------------------------------------------------------'
+
+while :; do
+
+  if [[ -s qllm.txt ]]; then
+    x=$(tail -n 3 qllm.txt; echo x)
+    if [[ $x != "$user_heading"$'\n\n\nx' ]]; then
+      printf '\n\n%s\n\n\n' "$user_heading" >>qllm.txt
+    fi
+  else
+    printf '%s\n\n\n' "$user_heading" >>qllm.txt
+  fi
+
+  hash1=$(sha256sum -b qllm.txt)
+
+  eval " $editor qllm.txt"
+
+  hash2=$(sha256sum -b qllm.txt)
+
+  if [[ $hash1 == "$hash2" ]]; then
+    break
+  fi
+
+  printf '\n\n%s\n\n\n' "$model_heading" >>qllm.txt
+
+  eval " $gawk -v q=\\' "\''
+
+    function json_quote(buffer,    c, r, s) {
+      c = "jq -R -s .";
+      print buffer |& c;
+      s = close(c, "to");
+      if (s != 0) {
+        print "\"" c "\" failed" >"/dev/stderr";
+        exit 1;
+      }
+      c |& getline r;
+      s = close(c);
+      if (s != 0) {
+        print "\"" c "\" failed" >"/dev/stderr";
+        exit 1;
+      }
+      return r;
+    }
+
+    function add_text(role, buffer,    p, c) {
+      if (role) {
+        p = "{\"text\": " json_quote(buffer) "}";
+        c = "{\"role\": \"" role "\", \"parts\": [" p "]}";
+        if (contents) {
+          contents = contents ",";
+        }
+        contents = contents c;
+      }
+    }
+
+    BEGIN {
+      role = "";
+      buffer = "";
+    }
+
+    {
+      if (/^% *User( .*)$/) {
+        add_text(role, buffer);
+        role = "user";
+        buffer = "";
+      } else if (/^% *Model( .*)$/) {
+        add_text(role, buffer);
+        role = "model";
+        buffer = "";
+      } else if (role == "user") {
+        if (buffer) {
+          buffer = buffer "\n";
+        }
+        buffer = buffer $0;
+      } else if (role == "model") {
+        if (buffer) {
+          buffer = buffer "\n";
+        }
+        buffer = buffer $0;
+      }
+    }
+
+    END {
+      add_text(role, buffer);
+      print "{\"contents\": [" contents "]}";
+    }
+
+  '\' qllm.txt | tee /dev/stderr | curl -L -S -f -s \
+    -X POST \
+    --url "https://$location-aiplatform.googleapis.com/v1/projects/$project/locations/$location/$model:generateContent" \
+    -H "Authorization: Bearer $bearer" \
+    -H "Content-Type: application/json" \
+    --data-binary @- \
+  | jq -r '.candidates[0].content.parts[0].text' >>qllm.txt
+
+done

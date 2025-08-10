@@ -43,6 +43,7 @@ files='
   bin/gpgsec-aws
   bin/https-server
   bin/jqbc
+  bin/qllm
   bin/qtts
   bin/s
   bin/ssh-autokey
