@@ -29,8 +29,8 @@ location=us-central1
 model=publishers/google/models/gemini-2.5-flash
 #model=publishers/google/models/gemini-2.5-pro
 
-user_heading='% User -----------------------------------------------------------------'
-model_heading='% Model ----------------------------------------------------------------'
+user_heading='@@@ User ---------------------------------------------------------------'
+model_heading='@@@ Model --------------------------------------------------------------'
 
 while :; do
 
@@ -52,8 +52,6 @@ while :; do
   if [[ $hash1 == "$hash2" ]]; then
     break
   fi
-
-  printf '\n\n%s\n\n\n' "$model_heading" >>qllm.txt
 
   eval " $gawk -v q=\\' "\''
 
@@ -86,16 +84,17 @@ while :; do
     }
 
     BEGIN {
+      IGNORECASE = 1;
       role = "";
       buffer = "";
     }
 
     {
-      if (/^% *User( .*)$/) {
+      if (/^@@@ *User( .*)$/) {
         add_text(role, buffer);
         role = "user";
         buffer = "";
-      } else if (/^% *Model( .*)$/) {
+      } else if (/^@@@ *Model( .*)$/) {
         add_text(role, buffer);
         role = "model";
         buffer = "";
@@ -117,12 +116,15 @@ while :; do
       print "{\"contents\": [" contents "]}";
     }
 
-  '\' qllm.txt | tee /dev/stderr | curl -L -S -f -s \
+  '\' qllm.txt | curl -L -S -f -s \
     -X POST \
     --url "https://$location-aiplatform.googleapis.com/v1/projects/$project/locations/$location/$model:generateContent" \
     -H "Authorization: Bearer $bearer" \
     -H "Content-Type: application/json" \
     --data-binary @- \
-  | jq -r '.candidates[0].content.parts[0].text' >>qllm.txt
+  | jq -r '.candidates[0].content.parts[0].text' | {
+    printf '\n\n%s\n\n\n' "$model_heading"
+    cat
+  } >>qllm.txt
 
 done
