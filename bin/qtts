@@ -306,7 +306,7 @@ fi
 if [[ ${QTTS_ENGINE-} == kokoro || \
       ( ! ${QTTS_ENGINE+x} && $QTTS_HAVE_DOCKER == 1 ) ]]; then
 
-  : ${QTTS_KOKORO_IMAGE:=quinngrier/qtts-kokoro}
+  : ${QTTS_KOKORO_IMAGE:=docker.io/quinngrier/qtts-kokoro}
 
   x=$(docker images -q "$QTTS_KOKORO_IMAGE")
   if [[ ! $x ]]; then
