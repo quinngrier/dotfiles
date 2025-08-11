@@ -13,6 +13,41 @@
 set -E -e -u -o pipefail || exit $?
 trap exit ERR
 
+search_up() {
+  local -n search_up__r=$1
+  local search_up__d="$PWD"
+  while [[ $search_up__d ]]; do
+    search_up__r=${search_up__d%/}/$2
+    if [[ -e $search_up__r ]]; then
+      return
+    fi
+    search_up__d=${search_up__d%/*}
+  done
+  search_up__r=
+}; readonly -f search_up
+
+search_up_or_home() {
+  local -n search_up_or_home__r=$1
+  search_up search_up_or_home__r "$2"
+  if [[ ! $search_up_or_home__r && -e $HOME/$2 ]]; then
+    search_up_or_home__r=$HOME/$2
+  fi
+}; readonly -f search_up_or_home
+
+declare -r \
+  default_system_prompt="You and the user are experts. Keep your answers short. Don't show any personality." \
+  nl=$'\n' \
+  qllm_dir_name=.qllm \
+  sq=\' \
+;
+
+system_prompt=$default_system_prompt
+
+search_up_or_home x $qllm_dir_name/system_prompts/default
+if [[ $x ]]; then
+  system_prompt=$(<"$x")
+fi
+
 if (($# > 0)); then
   printf '%s\n' "Arguments are not supported yet." >&2
   exit 1
@@ -25,106 +60,132 @@ bearer=$(gcloud auth print-access-token)
 project=$(gcloud config get-value project)
 location=us-central1
 
+session_file=qllm.txt
+
 # Listed in Google Cloud's web UI under Vertex AI > Model Garden.
 model=publishers/google/models/gemini-2.5-flash
 #model=publishers/google/models/gemini-2.5-pro
 
-user_heading='@@@ User ---------------------------------------------------------------'
-model_heading='@@@ Model --------------------------------------------------------------'
+printf -v blank_heading -- -%.s {1..72}
+readonly blank_heading
+
+user_heading='@@@ User '
+user_heading+=${blank_heading:${#user_heading}}
+readonly user_heading
+
+model_heading='@@@ Model '
+model_heading+=${blank_heading:${#model_heading}}
+readonly model_heading
 
 while :; do
 
-  if [[ -s qllm.txt ]]; then
-    x=$(tail -n 3 qllm.txt; echo x)
+  if [[ -s "$session_file" ]]; then
+    x=$(tail -n 3 -- "$session_file"; echo x)
     if [[ $x != "$user_heading"$'\n\n\nx' ]]; then
-      printf '\n\n%s\n\n\n' "$user_heading" >>qllm.txt
+      printf '\n\n%s\n\n\n' "$user_heading" >>"$session_file"
     fi
   else
-    printf '%s\n\n\n' "$user_heading" >>qllm.txt
+    printf '%s\n\n\n' "$user_heading" >>"$session_file"
   fi
 
-  hash1=$(sha256sum -b qllm.txt)
+  hash1=$(sha256sum -b -- "$session_file")
 
-  eval " $editor qllm.txt"
+  eval " $editor -- ${session_file@Q}"
 
-  hash2=$(sha256sum -b qllm.txt)
+  hash2=$(sha256sum -b -- "$session_file")
 
   if [[ $hash1 == "$hash2" ]]; then
     break
   fi
 
-  eval " $gawk -v q=\\' "\''
+  blah=$(
+    eval " $gawk"' \
+      -v nl="$nl" \
+      -v sq="$sq" \
+      -v system_prompt="$system_prompt" \
+      -- \
+      '\''
 
-    function json_quote(buffer,    c, r, s) {
-      c = "jq -R -s .";
-      print buffer |& c;
-      s = close(c, "to");
-      if (s != 0) {
-        print "\"" c "\" failed" >"/dev/stderr";
-        exit 1;
-      }
-      c |& getline r;
-      s = close(c);
-      if (s != 0) {
-        print "\"" c "\" failed" >"/dev/stderr";
-        exit 1;
-      }
-      return r;
-    }
-
-    function add_text(role, buffer,    p, c) {
-      if (role) {
-        p = "{\"text\": " json_quote(buffer) "}";
-        c = "{\"role\": \"" role "\", \"parts\": [" p "]}";
-        if (contents) {
-          contents = contents ",";
+        function json_quote(buffer,    c, r, s) {
+          c = "jq -R -s \".[:-1]\"";
+          print buffer |& c;
+          s = close(c, "to");
+          if (s != 0) {
+            print "\"" c "\" failed" >"/dev/stderr";
+            exit 1;
+          }
+          c |& getline r;
+          s = close(c);
+          if (s != 0) {
+            print "\"" c "\" failed" >"/dev/stderr";
+            exit 1;
+          }
+          return r;
         }
-        contents = contents c;
-      }
-    }
 
-    BEGIN {
-      IGNORECASE = 1;
-      role = "";
-      buffer = "";
-    }
-
-    {
-      if (/^@@@ *User( .*)$/) {
-        add_text(role, buffer);
-        role = "user";
-        buffer = "";
-      } else if (/^@@@ *Model( .*)$/) {
-        add_text(role, buffer);
-        role = "model";
-        buffer = "";
-      } else if (role == "user") {
-        if (buffer) {
-          buffer = buffer "\n";
+        function add_text(role, buffer,    p, c) {
+          sub("^" nl "*", "", buffer);
+          sub(nl "*$", "", buffer);
+          p = "{\"text\": " json_quote(buffer) "}";
+          c = "{\"role\": \"" role "\", \"parts\": [" p "]}";
+          if (contents) {
+            contents = contents ",";
+          }
+          contents = contents c;
         }
-        buffer = buffer $0;
-      } else if (role == "model") {
-        if (buffer) {
-          buffer = buffer "\n";
+
+        BEGIN {
+          IGNORECASE = 1;
+          role = "user";
+          buffer = "";
         }
-        buffer = buffer $0;
-      }
-    }
 
-    END {
-      add_text(role, buffer);
-      print "{\"contents\": [" contents "]}";
-    }
+        {
+          if (/^@@@ *User( .*)$/) {
+            if (role != "user") {
+              add_text(role, buffer);
+              role = "user";
+              buffer = "";
+            }
+          } else if (/^@@@ *Model( .*)$/) {
+            if (role != "model") {
+              add_text(role, buffer);
+              role = "model";
+              buffer = "";
+            }
+          } else {
+            buffer = buffer "\n" $0;
+          }
+        }
 
-  '\' qllm.txt | curl -L -S -f -s \
+        END {
+          add_text(role, buffer);
+          x = json_quote(system_prompt);
+          x = "{\"text\": " x "}";
+          x = "{\"parts\": [" x "]}";
+          body = "{";
+          body = body "\"systemInstruction\": " x;
+          body = body ", ";
+          body = body "\"contents\": [" contents "]"
+          body = body "}";
+          print body;
+        }
+
+      '\'' \
+      "$session_file" \
+    ;'
+  )
+
+  curl -L -S -f -s \
     -X POST \
     --url "https://$location-aiplatform.googleapis.com/v1/projects/$project/locations/$location/$model:generateContent" \
     -H "Authorization: Bearer $bearer" \
     -H "Content-Type: application/json" \
     --data-binary @- \
+    <<<"$blah" \
   | jq -r '.candidates[0].content.parts[0].text' | {
     printf '\n\n%s\n\n' "$model_heading"
     cat
-  } >>qllm.txt
+  } >>"$session_file"
 
 done
