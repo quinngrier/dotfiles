@@ -308,8 +308,8 @@ if [[ ${QTTS_ENGINE-} == kokoro || \
 
   : ${QTTS_KOKORO_IMAGE:=docker.io/quinngrier/qtts-kokoro}
 
-  x=$(docker images -q "$QTTS_KOKORO_IMAGE")
-  if [[ ! $x ]]; then
+  docker image inspect "$QTTS_KOKORO_IMAGE" >/dev/null && :
+  if (($? != 0)); then
     docker pull "$QTTS_KOKORO_IMAGE" >&2
   fi
 
