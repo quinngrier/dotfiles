@@ -60,7 +60,7 @@ bearer=$(gcloud auth print-access-token)
 project=$(gcloud config get-value project)
 location=us-central1
 
-session_file=qllm.txt
+session_file=default.qllm
 
 # Listed in Google Cloud's web UI under Vertex AI > Model Garden.
 model=publishers/google/models/gemini-2.5-flash
