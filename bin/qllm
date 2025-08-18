@@ -48,23 +48,161 @@ if [[ $x ]]; then
   system_prompt=$(<"$x")
 fi
 
-if (($# > 0)); then
-  printf '%s\n' "Arguments are not supported yet." >&2
-  exit 1
+#-----------------------------------------------------------------------
+# Parse the command-line arguments
+#-----------------------------------------------------------------------
+
+declare -A -r short_to_long=(
+  [-m]=--model
+)
+
+parse_options=1
+
+unset session_file
+
+while (($# > 0)); do
+
+  if ((parse_options)); then
+
+    #-------------------------------------------------------------------
+    # Options terminator
+    #-------------------------------------------------------------------
+
+    case $1 in (--)
+      parse_options=0
+      shift
+      continue
+
+    #-------------------------------------------------------------------
+    # --model=<model>, -m <model>
+    #-------------------------------------------------------------------
+
+    ;; (--model=*)
+      QLLM_MODEL=${1#*=}
+      shift
+      continue
+
+    #-------------------------------------------------------------------
+    # --foo bar to --foo=bar adjustments
+    #-------------------------------------------------------------------
+
+    ;; ( \
+      --model \
+    )
+      if (($# < 2)); then
+        printf '%s\n' "$0: $1 requires an argument" >&2
+        exit 1
+      fi
+      x=$1=$2
+      shift 2
+      set -- "$x" "$@"
+      continue
+
+    #-------------------------------------------------------------------
+    # -f bar to --foo=bar adjustments
+    #-------------------------------------------------------------------
+
+    ;; (-[m])
+      if (($# < 2)); then
+        printf '%s\n' "$0: $1 requires an argument" >&2
+        exit 1
+      fi
+      x=${short_to_long[$1]}=$2
+      shift 2
+      set -- "$x" "$@"
+      continue
+
+    #-------------------------------------------------------------------
+    # -fbar to --foo=bar adjustments
+    #-------------------------------------------------------------------
+
+    ;; (-[m]?*)
+      x=${short_to_long[${1:0:2}]}=${1:2}
+      shift
+      set -- "$x" "$@"
+      continue
+
+    #-------------------------------------------------------------------
+    # Long options incorrectly given arguments
+    #-------------------------------------------------------------------
+
+    ;; ( \
+      --=* \
+    )
+      x=${1%%=*}
+      printf '%s\n' "$0: $x forbids an argument" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # Unknown long options
+    #-------------------------------------------------------------------
+
+    ;; (--*)
+      x=${1%%=*}
+      printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    # Unknown short options
+    #-------------------------------------------------------------------
+
+    ;; (-?*)
+      x=${1:0:2}
+      printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
+      exit 1
+
+    #-------------------------------------------------------------------
+    esac
+  fi
+
+  if [[ ! ${session_file+x} ]]; then
+    session_file=$1
+  else
+    printf '%s\n' "$0: Too many operands" >&2
+    exit 1
+  fi
+
+  shift
+
+done
+
+if [[ ! ${session_file+x} ]]; then
+  session_file=default.qllm
 fi
+
+if [[ ! ${QLLM_MODEL+x} ]]; then
+  QLLM_MODEL=vertex-gemini-2.5-flash
+fi
+
+#-----------------------------------------------------------------------
+
+unset vertex_bearer
+
+vertex_init() {
+  if [[ ! ${vertex_bearer+x} ]]; then
+    vertex_bearer=$(gcloud auth print-access-token)
+    vertex_project=$(gcloud config get-value project)
+    vertex_location=us-central1
+  fi
+  completions_url="https://$vertex_location-aiplatform.googleapis.com/v1beta1/projects/$vertex_project/locations/$vertex_location/endpoints/openapi/chat/completions"
+  completions_bearer=$vertex_bearer
+}; readonly -f vertex_init
+
+#-----------------------------------------------------------------------
+
+declare -A -r model_map=(
+  # Listed in Google Cloud's web UI under Vertex AI > Model Garden.
+  [vertex-gemini-2.5-flash]="google/gemini-2.5-flash"
+  [vertex-gemini-2.5-pro]="google/gemini-2.5-pro"
+)
+
+declare -A -r init_functions=(
+  [vertex-gemini-2.5-flash]=vertex_init
+  [vertex-gemini-2.5-pro]=vertex_init
+)
 
 editor="${EDITOR-vi} ${EDITOR_BOTTOM-}"
 gawk=gawk
-
-bearer=$(gcloud auth print-access-token)
-project=$(gcloud config get-value project)
-location=us-central1
-
-session_file=default.qllm
-
-# Listed in Google Cloud's web UI under Vertex AI > Model Garden.
-model=publishers/google/models/gemini-2.5-flash
-#model=publishers/google/models/gemini-2.5-pro
 
 printf -v blank_heading -- -%.s {1..72}
 readonly blank_heading
@@ -78,6 +216,9 @@ model_heading+=${blank_heading:${#model_heading}}
 readonly model_heading
 
 while :; do
+
+  model=${model_map[$QLLM_MODEL]}
+  ${init_functions[$QLLM_MODEL]}
 
   if [[ -s "$session_file" ]]; then
     x=$(tail -n 3 -- "$session_file"; echo x)
@@ -98,46 +239,51 @@ while :; do
     break
   fi
 
-  blah=$(
+  completions_request=$(
     eval " $gawk"' \
+      -v argv0="$0" \
+      -v model="$model" \
       -v nl="$nl" \
       -v sq="$sq" \
       -v system_prompt="$system_prompt" \
       -- \
       '\''
 
-        function json_quote(buffer,    c, r, s) {
+        function json_quote(x,    c, s) {
           c = "jq -R -s \".[:-1]\"";
-          print buffer |& c;
+          print x |& c;
           s = close(c, "to");
           if (s != 0) {
-            print "\"" c "\" failed" >"/dev/stderr";
-            exit 1;
+            print argv0 ": \"" c "\" failed" >"/dev/stderr";
+            exit_status = 1;
+            exit exit_status;
           }
-          c |& getline r;
+          c |& getline x;
           s = close(c);
           if (s != 0) {
-            print "\"" c "\" failed" >"/dev/stderr";
-            exit 1;
+            print argv0 ": \"" c "\" failed" >"/dev/stderr";
+            exit_status = 1;
+            exit exit_status;
           }
-          return r;
+          return x;
         }
 
-        function add_text(role, buffer,    p, c) {
+        function add_text(role, buffer,    p) {
           sub("^" nl "*", "", buffer);
           sub(nl "*$", "", buffer);
-          p = "{\"text\": " json_quote(buffer) "}";
-          c = "{\"role\": \"" role "\", \"parts\": [" p "]}";
-          if (contents) {
-            contents = contents ",";
+          p = "{\"type\": \"text\", \"text\": " json_quote(buffer) "}";
+          p = "{\"role\": \"" role "\", \"content\": [" p "]}";
+          if (messages) {
+            messages = messages ",";
           }
-          contents = contents c;
+          messages = messages p;
         }
 
         BEGIN {
           IGNORECASE = 1;
           role = "user";
           buffer = "";
+          add_text("system", system_prompt);
         }
 
         {
@@ -148,9 +294,9 @@ while :; do
               buffer = "";
             }
           } else if (/^@@@ *Model( .*)$/) {
-            if (role != "model") {
+            if (role != "assistant") {
               add_text(role, buffer);
-              role = "model";
+              role = "assistant";
               buffer = "";
             }
           } else {
@@ -159,14 +305,14 @@ while :; do
         }
 
         END {
+          if (exit_status) {
+            exit exit_status;
+          }
           add_text(role, buffer);
-          x = json_quote(system_prompt);
-          x = "{\"text\": " x "}";
-          x = "{\"parts\": [" x "]}";
           body = "{";
-          body = body "\"systemInstruction\": " x;
+          body = body "\"model\": " json_quote(model);
           body = body ", ";
-          body = body "\"contents\": [" contents "]"
+          body = body "\"messages\": [" messages "]"
           body = body "}";
           print body;
         }
@@ -178,12 +324,12 @@ while :; do
 
   curl -L -S -f -s \
     -X POST \
-    --url "https://$location-aiplatform.googleapis.com/v1/projects/$project/locations/$location/$model:generateContent" \
-    -H "Authorization: Bearer $bearer" \
+    --url "$completions_url" \
+    -H "Authorization: Bearer $completions_bearer" \
     -H "Content-Type: application/json" \
     --data-binary @- \
-    <<<"$blah" \
-  | jq -r '.candidates[0].content.parts[0].text' | {
+    <<<"$completions_request" \
+  | jq -r '.choices[0].message.content' | {
     printf '\n\n%s\n\n' "$model_heading"
     cat
   } >>"$session_file"
