@@ -130,7 +130,7 @@ while (($# > 0)); do
     # Options terminator
     #-------------------------------------------------------------------
 
-    case $1 in --)
+    case $1 in (--)
       parse_options=0
       shift
       continue
@@ -139,7 +139,7 @@ while (($# > 0)); do
     # --model=<model>, -m <model>
     #-------------------------------------------------------------------
 
-    ;; --model=*)
+    ;; (--model=*)
       QTTS_MODEL=${1#*=}
       shift
       continue
@@ -148,7 +148,7 @@ while (($# > 0)); do
     # --output=<file>, -o <file>
     #-------------------------------------------------------------------
 
-    ;; --output=*)
+    ;; (--output=*)
       QTTS_OUTPUT=${1#*=}
       shift
       continue
@@ -157,7 +157,7 @@ while (($# > 0)); do
     # --voice=<voice>, -v <voice>
     #-------------------------------------------------------------------
 
-    ;; --voice=*)
+    ;; (--voice=*)
       QTTS_VOICE=${1#*=}
       shift
       continue
@@ -166,10 +166,10 @@ while (($# > 0)); do
     # --foo bar to --foo=bar adjustments
     #-------------------------------------------------------------------
 
-    ;; -- \
-      | --model \
-      | --output \
-      | --voice \
+    ;; ( \
+      --model | \
+      --output | \
+      --voice \
     )
       if (($# < 2)); then
         printf '%s\n' "$0: $1 requires an argument" >&2
@@ -184,7 +184,7 @@ while (($# > 0)); do
     # -f bar to --foo=bar adjustments
     #-------------------------------------------------------------------
 
-    ;; -[mov])
+    ;; (-[mov])
       if (($# < 2)); then
         printf '%s\n' "$0: $1 requires an argument" >&2
         exit 1
@@ -198,7 +198,7 @@ while (($# > 0)); do
     # -fbar to --foo=bar adjustments
     #-------------------------------------------------------------------
 
-    ;; -[mov]?*)
+    ;; (-[mov]?*)
       x=${short_to_long[${1:0:2}]}=${1:2}
       shift
       set -- "$x" "$@"
@@ -208,7 +208,8 @@ while (($# > 0)); do
     # Long options incorrectly given arguments
     #-------------------------------------------------------------------
 
-    ;; --=* \
+    ;; ( \
+      --=* \
     )
       x=${1%%=*}
       printf '%s\n' "$0: $x forbids an argument" >&2
@@ -218,7 +219,7 @@ while (($# > 0)); do
     # Unknown long options
     #-------------------------------------------------------------------
 
-    ;; --*)
+    ;; (--*)
       x=${1%%=*}
       printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
       exit 1
@@ -227,7 +228,7 @@ while (($# > 0)); do
     # Unknown short options
     #-------------------------------------------------------------------
 
-    ;; -?*)
+    ;; (-?*)
       x=${1:0:2}
       printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
       exit 1
@@ -521,8 +522,7 @@ fi
 # kitten
 #-----------------------------------------------------------------------
 
-if [[ ${QTTS_MODEL-} == kitten || \
-      ( ! ${QTTS_MODEL+x} && $QTTS_HAVE_DOCKER == 1 ) ]]; then
+if [[ ${QTTS_MODEL-} == kitten ]]; then
   run_dockerized_model kitten
   exit
 fi
@@ -531,7 +531,8 @@ fi
 # kokoro
 #-----------------------------------------------------------------------
 
-if [[ ${QTTS_MODEL-} == kokoro ]]; then
+if [[ ${QTTS_MODEL-} == kokoro || \
+      ( ! ${QTTS_MODEL+x} && $QTTS_HAVE_DOCKER == 1 ) ]]; then
   run_dockerized_model kokoro
   exit
 fi
