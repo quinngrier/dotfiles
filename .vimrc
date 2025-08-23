@@ -32,6 +32,15 @@ augroup vimrc
 augroup end
 
 "-----------------------------------------------------------------------
+" Make filetype default to text
+"-----------------------------------------------------------------------
+
+autocmd vimrc BufEnter *
+  \ if empty(&filetype) |
+  \   let &l:filetype='text' |
+  \ endif
+
+"-----------------------------------------------------------------------
 " Encoding
 "-----------------------------------------------------------------------
 "
@@ -210,11 +219,6 @@ inoremap <silent> <C-h> <C-o>:let v:hlsearch = !v:hlsearch<CR>
 
 autocmd vimrc BufEnter *
   \ setlocal formatoptions=nq
-
-autocmd vimrc BufEnter *
-  \ if empty(&filetype) |
-  \   let &l:formatlistpat='\v\c^\s*([*-]|\d+\.|todo:)\s+' |
-  \ endif
 
 function! Gq(visual)
   const l:old_autoindent = &autoindent
