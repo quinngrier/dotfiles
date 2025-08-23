@@ -8,6 +8,8 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
+let &l:formatlistpat='\v\c^\s*([*-]|\d+\.|todo:)\s+'
+
 setlocal shiftwidth=2
 
 setlocal textwidth=72
