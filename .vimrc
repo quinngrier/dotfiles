@@ -37,7 +37,7 @@ augroup end
 
 autocmd vimrc BufEnter *
   \ if empty(&filetype) |
-  \   let &l:filetype='text' |
+  \   let &l:filetype = "text" |
   \ endif
 
 "-----------------------------------------------------------------------
