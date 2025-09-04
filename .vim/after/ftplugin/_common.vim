@@ -8,10 +8,10 @@
 " <https://creativecommons.org/publicdomain/zero/1.0/>.
 "
 
-let &l:formatlistpat='\v\c^\s*([*-]|\d+\.|todo:)\s+'
+let &l:formatlistpat = '\v\c^\s*([*-]|\d+\.|todo:)\s+'
 
-setlocal shiftwidth=2
+let &l:shiftwidth = 2
 
 let &l:smartindent = 0
 
-setlocal textwidth=72
+let &l:textwidth = 72
