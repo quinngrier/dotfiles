@@ -53,6 +53,7 @@ fi
 #-----------------------------------------------------------------------
 
 declare -A -r short_to_long=(
+  [-d]=--debug
   [-m]=--model
 )
 
@@ -74,6 +75,15 @@ while (($# > 0)); do
       continue
 
     #-------------------------------------------------------------------
+    # --debug, -d
+    #-------------------------------------------------------------------
+
+    ;; (--debug)
+      QLLM_DEBUG=
+      shift
+      continue
+
+    #-------------------------------------------------------------------
     # --model=<model>, -m <model>
     #-------------------------------------------------------------------
 
@@ -83,7 +93,7 @@ while (($# > 0)); do
       continue
 
     #-------------------------------------------------------------------
-    # --foo bar to --foo=bar adjustments
+    # Long options with required arguments: --foo bar to --foo=bar
     #-------------------------------------------------------------------
 
     ;; ( \
@@ -99,7 +109,7 @@ while (($# > 0)); do
       continue
 
     #-------------------------------------------------------------------
-    # -f bar to --foo=bar adjustments
+    # Short options with required arguments: -f bar to --foo=bar
     #-------------------------------------------------------------------
 
     ;; (-[m])
@@ -113,13 +123,34 @@ while (($# > 0)); do
       continue
 
     #-------------------------------------------------------------------
-    # -fbar to --foo=bar adjustments
+    # Short options with required arguments: -fbar to --foo=bar
     #-------------------------------------------------------------------
 
     ;; (-[m]?*)
       x=${short_to_long[${1:0:2}]}=${1:2}
       shift
       set -- "$x" "$@"
+      continue
+
+    #-------------------------------------------------------------------
+    # Short options with forbidden arguments: -f to --foo
+    #-------------------------------------------------------------------
+
+    ;; (-[d])
+      x=${short_to_long[$1]}
+      shift
+      set -- "$x" "$@"
+      continue
+
+    #-------------------------------------------------------------------
+    # Short options with forbidden arguments: -fbar to --foo -bar
+    #-------------------------------------------------------------------
+
+    ;; (-[d]?*)
+      x=${short_to_long[${1:0:2}]}
+      y=-${1:2}
+      shift
+      set -- "$x" "$y" "$@"
       continue
 
     #-------------------------------------------------------------------
@@ -207,17 +238,168 @@ gawk=gawk
 printf -v blank_heading -- -%.s {1..72}
 readonly blank_heading
 
-user_heading='@@@ User '
+user_heading='@@@ user '
 user_heading+=${blank_heading:${#user_heading}}
 readonly user_heading
 
-model_heading='@@@ Model '
+model_heading='@@@ model '
 model_heading+=${blank_heading:${#model_heading}}
 readonly model_heading
 
+#-----------------------------------------------------------------------
+
+declare -r qllm_to_completions_gawk='
+
+  function barf(message) {
+    print(argv0 ": " message) >"/dev/stderr";
+    exit_status = 1;
+    exit exit_status;
+  }
+
+  function command_filter(x, c,    s) {
+    printf("%s", x) |& c;
+    s = close(c, "to");
+    if (s != 0) {
+      barf("Command failed: " c);
+    }
+    c |& getline x;
+    s = close(c);
+    if (s != 0) {
+      barf("Command failed: " c);
+    }
+    return x;
+  }
+
+  function json_quote(x) {
+    return command_filter(x, "jq -R -s .");
+  }
+
+  function base64_encode(x) {
+    return command_filter(x, "base64");
+  }
+
+  function get_fence_type(filename) {
+    if (filename ~ /\.[ch]$/) {
+      return "c";
+    }
+    return "";
+  }
+
+  function add_text_content(x,    y) {
+    if (heredoc) {
+      if (x) {
+        x = x "\n";
+      }
+      y = "Here is the file `" heredoc "`:\n\n";
+      x = y "```" get_fence_type(heredoc) "\n" x "```";
+      heredoc = "";
+    } else {
+      sub("^[\n ]*", "", x);
+      sub("[\n ]*$", "", x);
+      if (!x) {
+        return;
+      }
+    }
+    x = json_quote(x);
+    if (content) {
+      content = content ", ";
+    }
+    content = content "{";
+    content = content "\"type\": \"text\", ";
+    content = content "\"text\": " x;
+    content = content "}";
+  }
+
+  function add_message(role) {
+    if (content) {
+      content = "[" content "]";
+    } else {
+      content = "\" \"";
+    }
+    if (messages) {
+      messages = messages ", ";
+    }
+    messages = messages "{";
+    messages = messages "\"role\": \"" role "\", ";
+    messages = messages "\"content\": " content;
+    messages = messages "}";
+    content = "";
+  }
+
+  BEGIN {
+    add_text_content(system_prompt);
+    add_message("system");
+    role = "user";
+  }
+
+  {
+    if (/^@@@ *user[ -]*$/) {
+      if (role == "assistant") {
+        add_text_content(buffer);
+        add_message(role);
+        role = "user";
+        buffer = "";
+      }
+    } else if (/^@@@ *model[ -]*$/) {
+      if (role == "user") {
+        add_text_content(buffer);
+        add_message(role);
+        role = "assistant";
+        buffer = "";
+      }
+    } else if (role == "user") {
+      if (sub(/^@@@ *<< */, "")) {
+        sub(/ *$/, "");
+        if (heredoc || $0) {
+          add_text_content(buffer);
+          buffer = "";
+        }
+        heredoc = $0;
+      } else if (/^@@@/) {
+        barf("Unknown directive: " $0);
+      } else {
+        if (buffer) {
+          buffer = buffer "\n";
+        }
+        buffer = buffer $0;
+      }
+    } else {
+      if (/^@@@/) {
+        barf("Unknown directive: " $0);
+      }
+      if (buffer) {
+        buffer = buffer "\n";
+      }
+      buffer = buffer $0;
+    }
+  }
+
+  END {
+    if (exit_status) {
+      exit exit_status;
+    }
+    add_text_content(buffer);
+    add_message(role);
+    body = "{";
+    body = body "\"model\": " json_quote(model);
+    body = body ", ";
+    body = body "\"messages\": [" messages "]"
+    body = body "}";
+    print body;
+  }
+
+'
+
+#-----------------------------------------------------------------------
+
 while :; do
 
-  model=${model_map[$QLLM_MODEL]}
+  model=${model_map[$QLLM_MODEL]-}
+  if [[ ! $model ]]; then
+    printf '%s\n' "$0: Unknown model: ${QLLM_MODEL@Q}" >&2
+    exit 1
+  fi
+
   ${init_functions[$QLLM_MODEL]}
 
   if [[ -s "$session_file" ]]; then
@@ -243,84 +425,22 @@ while :; do
     eval " $gawk"' \
       -v argv0="$0" \
       -v model="$model" \
-      -v nl="$nl" \
       -v sq="$sq" \
       -v system_prompt="$system_prompt" \
       -- \
-      '\''
-
-        function json_quote(x,    c, s) {
-          c = "jq -R -s \".[:-1]\"";
-          print x |& c;
-          s = close(c, "to");
-          if (s != 0) {
-            print argv0 ": \"" c "\" failed" >"/dev/stderr";
-            exit_status = 1;
-            exit exit_status;
-          }
-          c |& getline x;
-          s = close(c);
-          if (s != 0) {
-            print argv0 ": \"" c "\" failed" >"/dev/stderr";
-            exit_status = 1;
-            exit exit_status;
-          }
-          return x;
-        }
-
-        function add_text(role, buffer,    p) {
-          sub("^" nl "*", "", buffer);
-          sub(nl "*$", "", buffer);
-          p = "{\"type\": \"text\", \"text\": " json_quote(buffer) "}";
-          p = "{\"role\": \"" role "\", \"content\": [" p "]}";
-          if (messages) {
-            messages = messages ",";
-          }
-          messages = messages p;
-        }
-
-        BEGIN {
-          IGNORECASE = 1;
-          role = "user";
-          buffer = "";
-          add_text("system", system_prompt);
-        }
-
-        {
-          if (/^@@@ *User( .*)$/) {
-            if (role != "user") {
-              add_text(role, buffer);
-              role = "user";
-              buffer = "";
-            }
-          } else if (/^@@@ *Model( .*)$/) {
-            if (role != "assistant") {
-              add_text(role, buffer);
-              role = "assistant";
-              buffer = "";
-            }
-          } else {
-            buffer = buffer "\n" $0;
-          }
-        }
-
-        END {
-          if (exit_status) {
-            exit exit_status;
-          }
-          add_text(role, buffer);
-          body = "{";
-          body = body "\"model\": " json_quote(model);
-          body = body ", ";
-          body = body "\"messages\": [" messages "]"
-          body = body "}";
-          print body;
-        }
-
-      '\'' \
+      "$qllm_to_completions_gawk" \
       "$session_file" \
     ;'
   )
+
+  if [[ ${QLLM_DEBUG+x} ]]; then
+
+    printf 'completions_request = %s\n' "$completions_request" >&2
+
+    x=$(jq . <<<"$completions_request" 2>&1 || :)
+    printf 'parsed_completions_request = %s\n' "$x" >&2
+
+  fi
 
   curl -L -S -f -s \
     -X POST \
