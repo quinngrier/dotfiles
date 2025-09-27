@@ -11,15 +11,15 @@
 #
 
 #
-# https-server - Static HTTPS server for development
+# qhttpd - Static HTTPS server for development
 #
 # Written in portable shell, but uses OpenSSL and Python.
 #
 
-cert=${HOME?}/.https-server/cert.pem
+cert=${HOME?}/.qhttpd/cert.pem
 readonly cert
 
-key=${HOME?}/.https-server/key.pem
+key=${HOME?}/.qhttpd/key.pem
 readonly key
 
 unset cert_found

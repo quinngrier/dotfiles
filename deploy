@@ -40,8 +40,8 @@ files='
   bin/gpgqu
   bin/gpgsec
   bin/gpgsec-aws
-  bin/https-server
   bin/jqbc
+  bin/qhttpd
   bin/qllm
   bin/qtts
   bin/s
