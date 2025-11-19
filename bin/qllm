@@ -215,7 +215,7 @@ vertex_init() {
     vertex_project=$(gcloud config get-value project)
     vertex_location=us-central1
   fi
-  completions_url="https://$vertex_location-aiplatform.googleapis.com/v1beta1/projects/$vertex_project/locations/$vertex_location/endpoints/openapi/chat/completions"
+  completions_url="https://aiplatform.googleapis.com/v1beta1/projects/$vertex_project/locations/$vertex_location/endpoints/openapi/chat/completions"
   completions_bearer=$vertex_bearer
 }; readonly -f vertex_init
 
@@ -225,11 +225,13 @@ declare -A -r model_map=(
   # Listed in Google Cloud's web UI under Vertex AI > Model Garden.
   [vertex-gemini-2.5-flash]="google/gemini-2.5-flash"
   [vertex-gemini-2.5-pro]="google/gemini-2.5-pro"
+  [vertex-gemini-3-pro-preview]="google/gemini-3-pro-preview"
 )
 
 declare -A -r init_functions=(
   [vertex-gemini-2.5-flash]=vertex_init
   [vertex-gemini-2.5-pro]=vertex_init
+  [vertex-gemini-3-pro-preview]=vertex_init
 )
 
 editor="${EDITOR-vi} ${EDITOR_BOTTOM-}"
@@ -278,6 +280,24 @@ declare -r qllm_to_completions_gawk='
     return command_filter(x, "base64");
   }
 
+  function read_text_file(f,    xs, s, x) {
+    xs = "";
+    while ((s = (getline x < f)) > 0) {
+      sub("[\t ]+$", "", x);
+      xs = xs x "\n";
+    }
+    if (s < 0) {
+      barf("Error reading file " json_quote(f));
+    }
+    s = close(f);
+    if (s != 0) {
+      barf("Error closing file " json_quote(f));
+    }
+    sub("^\n+", "", xs);
+    sub("\n+$", "", xs);
+    return xs;
+  }
+
   function get_fence_type(filename) {
     if (filename ~ /\.[ch]$/) {
       return "c";
@@ -285,7 +305,9 @@ declare -r qllm_to_completions_gawk='
     return "";
   }
 
-  function add_text_content(x,    y) {
+  function add_text_content(    x, y) {
+    x = buffer;
+    buffer = "";
     if (heredoc) {
       if (x) {
         x = x "\n";
@@ -327,7 +349,8 @@ declare -r qllm_to_completions_gawk='
   }
 
   BEGIN {
-    add_text_content(system_prompt);
+    buffer = system_prompt;
+    add_text_content();
     add_message("system");
     role = "user";
   }
@@ -335,26 +358,36 @@ declare -r qllm_to_completions_gawk='
   {
     if (/^@@@ *user[ -]*$/) {
       if (role == "assistant") {
-        add_text_content(buffer);
+        add_text_content();
         add_message(role);
         role = "user";
-        buffer = "";
       }
     } else if (/^@@@ *model[ -]*$/) {
       if (role == "user") {
-        add_text_content(buffer);
+        add_text_content();
         add_message(role);
         role = "assistant";
-        buffer = "";
       }
     } else if (role == "user") {
       if (sub(/^@@@ *<< */, "")) {
         sub(/ *$/, "");
-        if (heredoc || $0) {
-          add_text_content(buffer);
-          buffer = "";
+        if (!$0 && !heredoc) {
+          barf("Orphan @@@<< block terminator");
         }
+        add_text_content();
         heredoc = $0;
+      } else if (sub(/^@@@ *< */, "")) {
+        sub(/ *$/, "");
+        if (!$0) {
+          barf("The @@@< directive requires a filename");
+        }
+        if (heredoc) {
+          barf("The @@@< directive cannot be used in a @@@<< block");
+        }
+        add_text_content();
+        heredoc = $0;
+        buffer = read_text_file(heredoc);
+        add_text_content();
       } else if (/^@@@/) {
         barf("Unknown directive: " $0);
       } else {
