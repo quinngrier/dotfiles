@@ -10,8 +10,22 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-set -E -e -u -o pipefail || exit $?
+case ${BASH_VERSINFO-} in [0-4])
+  printf '%s\n' "$0: This script requires Bash version 5 or later. You have version ${BASH_VERSION-Unknown}." >&2
+  exit 1
+esac
+
+set -E -e -o pipefail -u || exit $?
 trap exit ERR
+
+#-----------------------------------------------------------------------
+# search_up <&r> <p>
+#-----------------------------------------------------------------------
+#
+# Starting from the current directory, search up the directory tree for
+# the path <p> to exist. If found, set <&r> to an absolute path to the
+# first such existent result. Otherwise, set <&r> to be empty.
+#
 
 search_up() {
   local -n search_up__r=$1
@@ -26,6 +40,13 @@ search_up() {
   search_up__r=
 }; readonly -f search_up
 
+#-----------------------------------------------------------------------
+# search_up_or_home <&r> <p>
+#-----------------------------------------------------------------------
+#
+# Like search_up(), but also search $HOME at the end, if needed.
+#
+
 search_up_or_home() {
   local -n search_up_or_home__r=$1
   search_up search_up_or_home__r "$2"
@@ -33,6 +54,8 @@ search_up_or_home() {
     search_up_or_home__r=$HOME/$2
   fi
 }; readonly -f search_up_or_home
+
+#-----------------------------------------------------------------------
 
 declare -r \
   default_system_prompt="You and the user are experts. Keep your answers short. Don't show any personality." \
@@ -201,6 +224,9 @@ if [[ ! ${session_file+x} ]]; then
   session_file=default.qllm
 fi
 
+session_file_new=$session_file.new
+readonly session_file_new
+
 if [[ ! ${QLLM_MODEL+x} ]]; then
   QLLM_MODEL=vertex-gemini-2.5-flash
 fi
@@ -353,42 +379,67 @@ declare -r qllm_to_completions_gawk='
     add_text_content();
     add_message("system");
     role = "user";
+
+    tools = "{";
+    tools = tools "\"type\": \"function\", ";
+    tools = tools "\"function\": {";
+    tools = tools "\"name\": \"write_text_file\", ";
+    tools = tools "\"description\": \"Create or overwrite a text file with the given content.\", ";
+    tools = tools "\"parameters\": {";
+    tools = tools "\"type\": \"object\", ";
+    tools = tools "\"properties\": {";
+    tools = tools "\"path\": {";
+    tools = tools "\"type\": \"string\",";
+    tools = tools "\"description\": \"A path to the text file to create or overwrite.\"";
+    tools = tools "},";
+    tools = tools "\"content\": {";
+    tools = tools "\"type\": \"string\",";
+    tools = tools "\"description\": \"The content to write to the text file.\"";
+    tools = tools "}";
+    tools = tools "},";
+    tools = tools "\"required\": [\"path\", \"content\"]";
+    tools = tools "}";
+    tools = tools "}";
+    tools = tools "}";
   }
 
   {
-    if (/^@@@ *user[ -]*$/) {
+    if ($0 ~ /^@@@ *user[ -]*$/) {
       if (role == "assistant") {
         add_text_content();
         add_message(role);
         role = "user";
       }
-    } else if (/^@@@ *model[ -]*$/) {
+    } else if ($0 ~ /^@@@ *model[ -]*$/) {
       if (role == "user") {
         add_text_content();
         add_message(role);
         role = "assistant";
       }
     } else if (role == "user") {
-      if (sub(/^@@@ *<< */, "")) {
-        sub(/ *$/, "");
-        if (!$0 && !heredoc) {
+      z = $0;
+      if (sub(/^@@@ *<< */, "", z)) {
+        sub(/ *$/, "", z);
+        if (!z && !heredoc) {
           barf("Orphan @@@<< block terminator");
         }
         add_text_content();
-        heredoc = $0;
-      } else if (sub(/^@@@ *< */, "")) {
-        sub(/ *$/, "");
-        if (!$0) {
+        heredoc = z;
+      } else if (sub(/^@@@ *< */, "", z)) {
+        sub(/ *$/, "", z);
+        if (!z) {
           barf("The @@@< directive requires a filename");
         }
         if (heredoc) {
           barf("The @@@< directive cannot be used in a @@@<< block");
         }
         add_text_content();
-        heredoc = $0;
+        heredoc = z;
         buffer = read_text_file(heredoc);
+        sub(/</, "<<", $0);
+        $0 = $0 "\n" buffer "\n@@@<<";
         add_text_content();
-      } else if (/^@@@/) {
+      } else if ($0 ~ /^@@@/) {
         barf("Unknown directive: " $0);
       } else {
         if (buffer) {
@@ -397,7 +448,7 @@ declare -r qllm_to_completions_gawk='
         buffer = buffer $0;
       }
     } else {
-      if (/^@@@/) {
+      if ($0 ~ /^@@@/) {
         barf("Unknown directive: " $0);
       }
       if (buffer) {
@@ -405,6 +456,7 @@ declare -r qllm_to_completions_gawk='
       }
       buffer = buffer $0;
     }
+    print $0 > session_file_new;
   }
 
   END {
@@ -414,9 +466,9 @@ declare -r qllm_to_completions_gawk='
     add_text_content(buffer);
     add_message(role);
     body = "{";
-    body = body "\"model\": " json_quote(model);
-    body = body ", ";
-    body = body "\"messages\": [" messages "]"
+    body = body "\"model\": " json_quote(model) ", ";
+    body = body "\"messages\": [" messages "], ";
+    body = body "\"tools\": [" tools "]";
     body = body "}";
     print body;
   }
@@ -458,6 +510,7 @@ while :; do
     eval " $gawk"' \
       -v argv0="$0" \
       -v model="$model" \
+      -v session_file_new="$session_file_new" \
       -v sq="$sq" \
       -v system_prompt="$system_prompt" \
       -- \
@@ -466,23 +519,32 @@ while :; do
     ;'
   )
 
+  mv -f -- "$session_file_new" "$session_file"
+
   if [[ ${QLLM_DEBUG+x} ]]; then
-
     printf 'completions_request = %s\n' "$completions_request" >&2
-
     x=$(jq . <<<"$completions_request" 2>&1 || :)
     printf 'parsed_completions_request = %s\n' "$x" >&2
-
   fi
 
-  curl -L -S -f -s \
-    -X POST \
-    --url "$completions_url" \
-    -H "Authorization: Bearer $completions_bearer" \
-    -H "Content-Type: application/json" \
-    --data-binary @- \
-    <<<"$completions_request" \
-  | jq -r '.choices[0].message.content' | {
+  completions_response=$(
+    curl -L -S -f -s \
+      -X POST \
+      --url "$completions_url" \
+      -H "Authorization: Bearer $completions_bearer" \
+      -H "Content-Type: application/json" \
+      --data-binary @- \
+      <<<"$completions_request" \
+    ;
+  )
+
+  if [[ ${QLLM_DEBUG+x} ]]; then
+    printf 'completions_response = %s\n' "$completions_response" >&2
+    x=$(jq . <<<"$completions_response" 2>&1 || :)
+    printf 'parsed_completions_response = %s\n' "$x" >&2
+  fi
+
+  jq -r '.choices[0].message.content' <<<"$completions_response" | {
     printf '\n\n%s\n\n' "$model_heading"
     cat
   } >>"$session_file"
