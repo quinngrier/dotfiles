@@ -1,4 +1,4 @@
-#! /bin/sh -
+#! /usr/bin/env bash
 
 #
 # The authors of this file have waived all copyright and
@@ -10,11 +10,15 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-#
-# qhttpd - Static HTTPS server for development
-#
-# Written in portable shell, but uses OpenSSL and Python.
-#
+case ${BASH_VERSINFO-} in [0-4] | '' | *[!0-9]*)
+  text="This script requires Bash version 5 or later"
+  text="$text. You have version ${BASH_VERSION-unknown}"
+  printf '%s\n' "$0: Error: $text." >&2
+  exit 1
+esac
+
+set -E -e -o pipefail -u || exit $?
+trap exit ERR
 
 cert=${HOME?}/.qhttpd/cert.pem
 readonly cert
