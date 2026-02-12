@@ -10,13 +10,44 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
-case ${BASH_VERSINFO-} in [0-4])
-  printf '%s\n' "$0: This script requires Bash version 5 or later. You have version ${BASH_VERSION-Unknown}." >&2
+#
+# This is qllm, a CLI for large language models.
+#
+# See <https://github.com/quinngrier/qllm>.
+#
+
+case ${BASH_VERSINFO-} in [0-4] | '' | *[!0-9]*)
+  text="This script requires Bash version 5 or later"
+  text="$text. You have version ${BASH_VERSION-unknown}"
+  printf '%s\n' "$0: Error: $text." >&2
   exit 1
 esac
 
 set -E -e -o pipefail -u || exit $?
 trap exit ERR
+
+#-----------------------------------------------------------------------
+# barf <text>...
+#-----------------------------------------------------------------------
+
+barf() {
+  local text
+  text="$@"
+  readonly text
+  printf '%s\n' "$0: Error: $text." >&2
+  exit 1
+}; readonly -f barf
+
+#-----------------------------------------------------------------------
+# warn <text>...
+#-----------------------------------------------------------------------
+
+warn() {
+  local text
+  text="$@"
+  readonly text
+  printf '%s\n' "$0: Warning: $text." >&2
+}; readonly -f warn
 
 #-----------------------------------------------------------------------
 # search_up <&r> <p>
@@ -54,6 +85,71 @@ search_up_or_home() {
     search_up_or_home__r=$HOME/$2
   fi
 }; readonly -f search_up_or_home
+
+#-----------------------------------------------------------------------
+# curl_with_retries <&response_body> <request_body>
+#                   <success_code_regex> <retry_code_regex>
+#                   <arg>...
+#-----------------------------------------------------------------------
+
+curl_with_retries() {
+
+  local -n curl_with_retries__response_body="$1"
+  shift
+
+  local -r request_body="$1"
+  shift
+
+  local -r success_code_regex="$1"
+  shift
+
+  local -r retry_code_regex="$1"
+  shift
+
+  local -r max_retries=4
+  local -r write_out='\n%{http_code}'
+
+  local num_retries=0
+  local retry_delay=1
+  local response_body
+  local response_code
+  while :; do
+    if [[ $request_body ]]; then
+      response_body=$(
+        curl -L -S -s \
+          -w "$write_out" \
+          "$@" \
+          <<<"$request_body" \
+        ;
+      )
+    else
+      response_body=$(
+        curl -L -S -s \
+          -w "$write_out" \
+          "$@" \
+        ;
+      )
+    fi
+    response_code=${response_body##*$'\n'}
+    response_body=${response_body%$'\n'*}
+    if [[ $response_code =~ $success_code_regex ]]; then
+      break
+    elif [[ $response_code =~ $retry_code_regex ]]; then
+      if ((++num_retries > max_retries)); then
+        barf "HTTPS request retry limit exceeded"
+      fi
+      ((retry_delay *= 2))
+      warn "HTTPS request failed with response code $response_code"
+      sleep $retry_delay
+      continue
+    else
+      barf "HTTPS request failed with response code $response_code"
+    fi
+  done
+
+  curl_with_retries__response_body=$response_body
+
+}; readonly -f curl_with_retries
 
 #-----------------------------------------------------------------------
 
@@ -123,8 +219,7 @@ while (($# > 0)); do
       --model \
     )
       if (($# < 2)); then
-        printf '%s\n' "$0: $1 requires an argument" >&2
-        exit 1
+        barf "$1 requires an argument"
       fi
       x=$1=$2
       shift 2
@@ -137,8 +232,7 @@ while (($# > 0)); do
 
     ;; (-[m])
       if (($# < 2)); then
-        printf '%s\n' "$0: $1 requires an argument" >&2
-        exit 1
+        barf "$1 requires an argument"
       fi
       x=${short_to_long[$1]}=$2
       shift 2
@@ -184,8 +278,7 @@ while (($# > 0)); do
       --=* \
     )
       x=${1%%=*}
-      printf '%s\n' "$0: $x forbids an argument" >&2
-      exit 1
+      barf "$x forbids an argument"
 
     #-------------------------------------------------------------------
     # Unknown long options
@@ -193,8 +286,7 @@ while (($# > 0)); do
 
     ;; (--*)
       x=${1%%=*}
-      printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
-      exit 1
+      barf "Unknown option: ${x@Q}"
 
     #-------------------------------------------------------------------
     # Unknown short options
@@ -202,8 +294,7 @@ while (($# > 0)); do
 
     ;; (-?*)
       x=${1:0:2}
-      printf '%s\n' "$0: Unknown option: ${x@Q}" >&2
-      exit 1
+      barf "Unknown option: ${x@Q}"
 
     #-------------------------------------------------------------------
     esac
@@ -212,8 +303,7 @@ while (($# > 0)); do
   if [[ ! ${session_file+x} ]]; then
     session_file=$1
   else
-    printf '%s\n' "$0: Too many operands" >&2
-    exit 1
+    barf "Too many operands"
   fi
 
   shift
@@ -260,7 +350,38 @@ declare -A -r init_functions=(
   [vertex-gemini-3-pro-preview]=vertex_init
 )
 
-editor="${EDITOR-vi} ${EDITOR_BOTTOM-}"
+#-----------------------------------------------------------------------
+# Parse VISUAL and friends
+#-----------------------------------------------------------------------
+
+unset editor_bottom
+
+if [[ ${VISUAL+x} ]]; then
+  editor=$VISUAL
+  if [[ ${VISUAL_BOTTOM+x} ]]; then
+    editor_bottom=$VISUAL_BOTTOM
+  fi
+elif [[ ${EDITOR+x} ]]; then
+  editor=$EDITOR
+  if [[ ${EDITOR_BOTTOM+x} ]]; then
+    editor_bottom=$EDITOR_BOTTOM
+  fi
+else
+  editor=vi
+  editor_bottom="-c '$'"
+fi
+
+if [[ ! ${editor_bottom+x} ]]; then
+  case $editor in (vi | vim)
+    editor_bottom="-c '$'"
+  esac
+fi
+
+editor="$editor ${editor_bottom-}"
+readonly editor
+
+#-----------------------------------------------------------------------
+
 gawk=gawk
 
 printf -v blank_heading -- -%.s {1..72}
@@ -481,8 +602,7 @@ while :; do
 
   model=${model_map[$QLLM_MODEL]-}
   if [[ ! $model ]]; then
-    printf '%s\n' "$0: Unknown model: ${QLLM_MODEL@Q}" >&2
-    exit 1
+    barf "Unknown model: ${QLLM_MODEL@Q}"
   fi
 
   ${init_functions[$QLLM_MODEL]}
@@ -527,16 +647,17 @@ while :; do
     printf 'parsed_completions_request = %s\n' "$x" >&2
   fi
 
-  completions_response=$(
-    curl -L -S -f -s \
-      -X POST \
-      --url "$completions_url" \
-      -H "Authorization: Bearer $completions_bearer" \
-      -H "Content-Type: application/json" \
-      --data-binary @- \
-      <<<"$completions_request" \
-    ;
-  )
+  curl_with_retries \
+    completions_response \
+    "$completions_request" \
+    '^(200)$' \
+    '^(401)$' \
+    -X POST \
+    --url "$completions_url" \
+    -H "Authorization: Bearer $completions_bearer" \
+    -H "Content-Type: application/json" \
+    --data-binary @- \
+  ;
 
   if [[ ${QLLM_DEBUG+x} ]]; then
     printf 'completions_response = %s\n' "$completions_response" >&2
