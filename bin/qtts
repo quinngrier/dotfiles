@@ -11,6 +11,12 @@
 #
 
 #
+# This is qtts, a CLI for text-to-speech models.
+#
+# See <https://github.com/quinngrier/qtts>.
+#
+
+#
 # TODO: This doc is old. Remove it after it's completely obsolete.
 #
 # Usage: qtts [<word>...]
@@ -59,8 +65,16 @@
 #       This is <https://github.com/hexgrad/kokoro>.
 #
 
-set -E -e -u -o pipefail || exit $?
+case ${BASH_VERSINFO-} in [0-4] | '' | *[!0-9]*)
+  text="This script requires Bash version 5 or later"
+  text="$text. You have version ${BASH_VERSION-unknown}"
+  printf '%s\n' "$0: Error: $text." >&2
+  exit 1
+esac
+
+set -E -e -o pipefail -u || exit $?
 trap exit ERR
+
 declare -r -x LC_ALL=C
 unset IFS
 
