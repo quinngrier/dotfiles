@@ -7,7 +7,7 @@
 # named <CC0-1.0.txt>. If not, it may be available at
 # <https://creativecommons.org/publicdomain/zero/1.0/>.
 #
-#-----------------------------------------------------------------------
+
 #
 # This file (~/.bash_profile) holds the code that should be run at the
 # start of every login session.
