@@ -27,27 +27,54 @@ set -E -e -o pipefail -u || exit $?
 trap exit ERR
 
 #-----------------------------------------------------------------------
-# barf <text>...
-#-----------------------------------------------------------------------
+#
+# This section was generated using qsh.
+# See <https://github.com/quinngrier/qsh>.
+#
+# The authors of this section have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
 
-barf() {
-  local text
-  text="$@"
-  readonly text
-  printf '%s\n' "$0: Error: $text." >&2
-  exit 1
-}; readonly -f barf
+qsh_barf() {
+
+  case $# in (0)
+    set "Unknown error"
+  esac
+
+  qsh_barf_message="$0: Error:"
+  for qsh_barf_text; do
+    qsh_barf_message="$qsh_barf_message $qsh_barf_text"
+  done
+  qsh_barf_message=$qsh_barf_message.
+
+  printf '%s\n' "$qsh_barf_message" >&2
+
+  exit "${qsh_barf_status-1}"
+
+}
+
+qsh_warn() {
+
+  case $# in (0)
+    set "Unknown warning"
+  esac
+
+  qsh_warn_message="$0: Warning:"
+  for qsh_warn_text; do
+    qsh_warn_message="$qsh_warn_message $qsh_warn_text"
+  done
+  qsh_warn_message=$qsh_warn_message.
+
+  printf '%s\n' "$qsh_warn_message" >&2
+
+}
 
 #-----------------------------------------------------------------------
-# warn <text>...
-#-----------------------------------------------------------------------
-
-warn() {
-  local text
-  text="$@"
-  readonly text
-  printf '%s\n' "$0: Warning: $text." >&2
-}; readonly -f warn
 
 #-----------------------------------------------------------------------
 # search_up <&r> <p>
@@ -136,14 +163,14 @@ curl_with_retries() {
       break
     elif [[ $response_code =~ $retry_code_regex ]]; then
       if ((++num_retries > max_retries)); then
-        barf "HTTPS request retry limit exceeded"
+        qsh_barf "HTTPS request retry limit exceeded"
       fi
       ((retry_delay *= 2))
-      warn "HTTPS request failed with response code $response_code"
+      qsh_warn "HTTPS request failed with response code $response_code"
       sleep $retry_delay
       continue
     else
-      barf "HTTPS request failed with response code $response_code"
+      qsh_barf "HTTPS request failed with response code $response_code"
     fi
   done
 
@@ -219,7 +246,7 @@ while (($# > 0)); do
       --model \
     )
       if (($# < 2)); then
-        barf "$1 requires an argument"
+        qsh_barf "$1 requires an argument"
       fi
       x=$1=$2
       shift 2
@@ -232,7 +259,7 @@ while (($# > 0)); do
 
     ;; (-[m])
       if (($# < 2)); then
-        barf "$1 requires an argument"
+        qsh_barf "$1 requires an argument"
       fi
       x=${short_to_long[$1]}=$2
       shift 2
@@ -278,7 +305,7 @@ while (($# > 0)); do
       --=* \
     )
       x=${1%%=*}
-      barf "$x forbids an argument"
+      qsh_barf "$x forbids an argument"
 
     #-------------------------------------------------------------------
     # Unknown long options
@@ -286,7 +313,7 @@ while (($# > 0)); do
 
     ;; (--*)
       x=${1%%=*}
-      barf "Unknown option: ${x@Q}"
+      qsh_barf "Unknown option: ${x@Q}"
 
     #-------------------------------------------------------------------
     # Unknown short options
@@ -294,7 +321,7 @@ while (($# > 0)); do
 
     ;; (-?*)
       x=${1:0:2}
-      barf "Unknown option: ${x@Q}"
+      qsh_barf "Unknown option: ${x@Q}"
 
     #-------------------------------------------------------------------
     esac
@@ -303,7 +330,7 @@ while (($# > 0)); do
   if [[ ! ${session_file+x} ]]; then
     session_file=$1
   else
-    barf "Too many operands"
+    qsh_barf "Too many operands"
   fi
 
   shift
@@ -459,7 +486,7 @@ declare -r qllm_to_completions_gawk='
       if (x) {
         x = x "\n";
       }
-      y = "Here is the file `" heredoc "`:\n\n";
+      y = "Here is the content of the file `" heredoc "`:\n\n";
       x = y "```" get_fence_type(heredoc) "\n" x "```";
       heredoc = "";
     } else {
@@ -602,7 +629,7 @@ while :; do
 
   model=${model_map[$QLLM_MODEL]-}
   if [[ ! $model ]]; then
-    barf "Unknown model: ${QLLM_MODEL@Q}"
+    qsh_barf "Unknown model: ${QLLM_MODEL@Q}"
   fi
 
   ${init_functions[$QLLM_MODEL]}
@@ -665,7 +692,26 @@ while :; do
     printf 'parsed_completions_response = %s\n' "$x" >&2
   fi
 
-  jq -r '.choices[0].message.content' <<<"$completions_response" | {
+  # TODO: Right now I'm just taking the model's write_text_file calls
+  # and updating the model's response as if the files had been inlined.
+
+  jq -r '
+    .
+    | .choices[0].message
+    | [.content] + (.
+      | .tool_calls // []
+      | map(.
+        | .function
+        | select(.name == "write_text_file")
+        | .arguments
+        | fromjson
+        | .content |= (if endswith("\n") then . else . + "\n" end)
+        | "Here is the content of the file `\(.path)`:\n\n```\n\(.content)```"
+        )
+      )
+    | map(select(.))
+    | join("\n\n")
+  ' <<<"$completions_response" | {
     printf '\n\n%s\n\n' "$model_heading"
     cat
   } >>"$session_file"
