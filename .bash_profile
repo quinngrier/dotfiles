@@ -47,8 +47,8 @@
 # ~/.bash_profile (because PATH is exported), while setting PS1 should
 # be done in ~/.bashrc (because PS1 is not exported).
 #
-# If the system provides a default ~/.bash_profile file, the master copy
-# can sometimes be found at one of the following locations:
+# If the system provides a default ~/.bash_profile file, it can usually
+# be found at one of the following locations:
 #
 #       /etc/defaults/etc/skel/.bash_profile
 #       /etc/skel/.bash_profile
