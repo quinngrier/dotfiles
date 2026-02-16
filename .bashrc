@@ -81,11 +81,17 @@ shopt -u \
 #
 #       (e; xs=$(git grep -l foo); sed -i 's/foo/bar/g' $xs)
 #
-# Do not use the e alias outside of a subshell! Doing so may interfere
-# with your environment.
+# You should only use the e alias in a subshell.
 #
 
-alias e='{ set -E -e -u -o pipefail || exit $?; trap exit ERR; }'
+alias e='{
+  if ((BASH_SUBSHELL > 0)); then
+    set -e -o pipefail -u || exit $?
+    shopt -s inherit_errexit
+  else
+    echo "You should only use the e alias in a subshell." >&2
+  fi
+}'
 
 #-----------------------------------------------------------------------
 # Nested SSH
