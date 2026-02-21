@@ -36,6 +36,7 @@ files='
   bin/git-d
   bin/git-u
   bin/git-ub
+  bin/gpgenv
   bin/gpgqg
   bin/gpgqg-gpgsec
   bin/gpgqu

@@ -1,0 +1,141 @@
+#! /usr/bin/env bash
+
+#
+# The authors of this file have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+#
+# Usage: gpgenv [<key_file>...] : <command> [<arg>...]
+#
+# Loads keys into an ephemeral home directory and runs a command.
+#
+
+#-----------------------------------------------------------------------
+# Set up initial error handling
+#-----------------------------------------------------------------------
+
+set -e -u || exit
+
+#-----------------------------------------------------------------------
+# Set up Qsh
+#-----------------------------------------------------------------------
+#
+# This section was generated using Qsh.
+# See <https://github.com/quinngrier/qsh>.
+#
+# The authors of this section have waived all copyright and
+# related or neighboring rights to the extent permitted by
+# law as described by the CC0 1.0 Universal Public Domain
+# Dedication. You should have received a copy of the full
+# dedication along with this file, typically as a file
+# named <CC0-1.0.txt>. If not, it may be available at
+# <https://creativecommons.org/publicdomain/zero/1.0/>.
+#
+
+qsh_barf() {
+
+  case $# in (0)
+    set "Unknown error"
+  esac
+
+  qsh_barf_message="$0: Error:"
+  for qsh_barf_text; do
+    qsh_barf_message="$qsh_barf_message $qsh_barf_text"
+  done
+  qsh_barf_message=$qsh_barf_message.
+
+  printf '%s\n' "$qsh_barf_message" >&2
+
+  exit "${qsh_exit_status-1}"
+
+}
+
+#-----------------------------------------------------------------------
+# Set up Bash
+#-----------------------------------------------------------------------
+
+case ${BASH_VERSINFO-} in ('' | *[!0-9]* | 0* | [0-4])
+  qsh_barf \
+    "This script requires Bash version 5.0 or later." \
+    "You have version ${BASH_VERSION-unknown}" \
+  ;
+esac
+
+set -o pipefail
+
+shopt -s \
+  inherit_errexit \
+;
+
+#-----------------------------------------------------------------------
+
+main() {
+
+  declare -g    GNUPGHOME
+
+  local -a key_files
+  local    parse_options
+
+  key_files=()
+
+  parse_options=1
+
+  while (($# > 0)); do
+
+    if ((parse_options)); then
+      if [[ $1 == -* ]]; then
+        qsh_barf "Options and stdin are not supported yet"
+      fi
+    fi
+
+    if [[ $1 == : ]]; then
+      shift
+      break
+    fi
+
+    key_files+=("$1")
+    shift
+    continue
+
+  done
+
+  readonly key_files
+
+  if (($# == 0)); then
+    qsh_barf "No command specified"
+  fi
+
+  GNUPGHOME=$(mktemp -d)
+  readonly GNUPGHOME
+  export GNUPGHOME
+
+  chmod 700 -- "$GNUPGHOME"
+
+  trap '
+    s=$?
+    gpgconf --kill all || :
+    rm -f -r -- "$GNUPGHOME" || :
+    exit $s
+  ' EXIT
+
+  if ((${#key_files[@]} > 0)); then
+    gpg \
+      --batch \
+      --quiet \
+      --import \
+      -- \
+      "${key_files[@]}" \
+    ;
+  fi
+
+  "$@"
+
+}; readonly -f main
+
+main "$@"
