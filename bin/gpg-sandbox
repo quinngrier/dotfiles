@@ -11,7 +11,7 @@
 #
 
 #
-# Usage: gpgenv [<key_file>...] : <command> [<arg>...]
+# Usage: gpg-sandbox [<key_file>...] : <command> [<arg>...]
 #
 # Loads keys into an ephemeral home directory and runs a command.
 #
