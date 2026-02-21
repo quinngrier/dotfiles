@@ -11,9 +11,11 @@
 #
 
 #
-# Usage: gpg-sandbox [<key_file>...] : <command> [<arg>...]
+# Usage: gpg-sandbox [<option>...] <command> [<arg>...]
 #
-# Loads keys into an ephemeral home directory and runs a command.
+# Runs a command in an ephemeral GnuPG home directory.
+#
+# Options parsing implicitly ends at <command>.
 #
 
 #-----------------------------------------------------------------------
@@ -79,36 +81,24 @@ main() {
 
   declare -g    GNUPGHOME
 
-  local -a key_files
   local    parse_options
-
-  key_files=()
 
   parse_options=1
 
   while (($# > 0)); do
 
     if ((parse_options)); then
-      if [[ $1 == -* ]]; then
-        qsh_barf "Options and stdin are not supported yet"
+      if [[ $1 == -?* ]]; then
+        qsh_barf "Options are not supported yet"
       fi
     fi
 
-    if [[ $1 == : ]]; then
-      shift
-      break
-    fi
-
-    key_files+=("$1")
-    shift
-    continue
+    break
 
   done
 
-  readonly key_files
-
   if (($# == 0)); then
-    qsh_barf "No command specified"
+    qsh_barf "Missing <command>"
   fi
 
   GNUPGHOME=$(mktemp -d)
@@ -123,16 +113,6 @@ main() {
     rm -f -r -- "$GNUPGHOME" || :
     exit $s
   ' EXIT
-
-  if ((${#key_files[@]} > 0)); then
-    gpg \
-      --batch \
-      --quiet \
-      --import \
-      -- \
-      "${key_files[@]}" \
-    ;
-  fi
 
   "$@"
 
