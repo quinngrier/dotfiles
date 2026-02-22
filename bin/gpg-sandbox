@@ -76,10 +76,28 @@ shopt -s \
 ;
 
 #-----------------------------------------------------------------------
+# Set up the sandbox
+#-----------------------------------------------------------------------
+
+unset GPG_AGENT_INFO
+
+GNUPGHOME=$(mktemp -d)
+readonly GNUPGHOME
+export GNUPGHOME
+
+trap '
+  s=$?
+  gpgconf --kill all || :
+  rm -f -r -- "$GNUPGHOME" || :
+  set +e
+  (exit $s)
+' EXIT
+
+chmod 700 -- "$GNUPGHOME"
+
+#-----------------------------------------------------------------------
 
 main() {
-
-  declare -g    GNUPGHOME
 
   local    parse_options
 
@@ -100,19 +118,6 @@ main() {
   if (($# == 0)); then
     qsh_barf "Missing <command>"
   fi
-
-  GNUPGHOME=$(mktemp -d)
-  readonly GNUPGHOME
-  export GNUPGHOME
-
-  chmod 700 -- "$GNUPGHOME"
-
-  trap '
-    s=$?
-    gpgconf --kill all || :
-    rm -f -r -- "$GNUPGHOME" || :
-    exit $s
-  ' EXIT
 
   "$@"
 
