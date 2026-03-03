@@ -96,6 +96,6 @@ fi
 # For more information, see the discussion at the top of this file.
 #
 
-if [[ $- == *i* && -f "$HOME/.bashrc" ]]; then
-  . "$HOME/.bashrc"
+if [[ $- == *i* && -f ~/.bashrc ]]; then
+  . ~/.bashrc
 fi
