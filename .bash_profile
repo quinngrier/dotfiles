@@ -81,6 +81,14 @@ BUILDKIT_PROGRESS=plain
 export BUILDKIT_PROGRESS
 
 #-----------------------------------------------------------------------
+# Run ~/.bash_profile.private if it exists
+#-----------------------------------------------------------------------
+
+if [[ -e ~/.bash_profile.private ]]; then
+  . ~/.bash_profile.private
+fi
+
+#-----------------------------------------------------------------------
 # Run ~/.bashrc for interactive sessions
 #-----------------------------------------------------------------------
 #
