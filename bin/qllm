@@ -11,21 +11,19 @@
 #
 
 #
-# This is qllm, a CLI for large language models.
+# This is Qllm, a large language model CLI.
 #
 # See <https://github.com/quinngrier/qllm>.
 #
 
-case ${BASH_VERSINFO-} in [0-4] | '' | *[!0-9]*)
-  text="This script requires Bash version 5 or later"
-  text="$text. You have version ${BASH_VERSION-unknown}"
-  printf '%s\n' "$0: Error: $text." >&2
-  exit 1
-esac
+#-----------------------------------------------------------------------
+# Set up initial error handling
+#-----------------------------------------------------------------------
 
-set -E -e -o pipefail -u || exit $?
-trap exit ERR
+set -e -u || exit
 
+#-----------------------------------------------------------------------
+# Set up qsh
 #-----------------------------------------------------------------------
 #
 # This section was generated using qsh.
@@ -54,7 +52,7 @@ qsh_barf() {
 
   printf '%s\n' "$qsh_barf_message" >&2
 
-  exit "${qsh_barf_status-1}"
+  exit "${qsh_exit_status-1}"
 
 }
 
@@ -75,6 +73,21 @@ qsh_warn() {
 }
 
 #-----------------------------------------------------------------------
+# Set up Bash
+#-----------------------------------------------------------------------
+
+case ${BASH_VERSINFO-} in ('' | *[!0-9]* | 0* | [0-4])
+  qsh_barf \
+    "This script requires Bash version 5.0 or later." \
+    "You have version ${BASH_VERSION-unknown}" \
+  ;
+esac
+
+set -o pipefail
+
+shopt -s \
+  inherit_errexit \
+;
 
 #-----------------------------------------------------------------------
 # search_up <&r> <p>
@@ -345,7 +358,7 @@ session_file_new=$session_file.new
 readonly session_file_new
 
 if [[ ! ${QLLM_MODEL+x} ]]; then
-  QLLM_MODEL=vertex-gemini-2.5-flash
+  qsh_barf "You must select a model using --model or QLLM_MODEL"
 fi
 
 #-----------------------------------------------------------------------
@@ -364,17 +377,23 @@ vertex_init() {
 
 #-----------------------------------------------------------------------
 
+# TODO: google/gemini-3-pro-preview will be discontinued on 2026-03-26.
+
+# These names are listed in Google Cloud's web UI under Vertex AI >
+# Model Garden. If you go to a specific model, the name is listed as
+# "Version name".
 declare -A -r model_map=(
-  # Listed in Google Cloud's web UI under Vertex AI > Model Garden.
   [vertex-gemini-2.5-flash]="google/gemini-2.5-flash"
   [vertex-gemini-2.5-pro]="google/gemini-2.5-pro"
   [vertex-gemini-3-pro-preview]="google/gemini-3-pro-preview"
+  [vertex-gemini-3.1-pro-preview]="google/gemini-3.1-pro-preview"
 )
 
 declare -A -r init_functions=(
   [vertex-gemini-2.5-flash]=vertex_init
   [vertex-gemini-2.5-pro]=vertex_init
   [vertex-gemini-3-pro-preview]=vertex_init
+  [vertex-gemini-3.1-pro-preview]=vertex_init
 )
 
 #-----------------------------------------------------------------------
