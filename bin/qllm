@@ -369,9 +369,9 @@ vertex_init() {
   if [[ ! ${vertex_bearer+x} ]]; then
     vertex_bearer=$(gcloud auth print-access-token)
     vertex_project=$(gcloud config get-value project)
-    vertex_location=us-central1
+    vertex_location=global
   fi
-  completions_url="https://aiplatform.googleapis.com/v1beta1/projects/$vertex_project/locations/$vertex_location/endpoints/openapi/chat/completions"
+  completions_url="https://aiplatform.googleapis.com/v1/projects/$vertex_project/locations/$vertex_location/endpoints/openapi/chat/completions"
   completions_bearer=$vertex_bearer
 }; readonly -f vertex_init
 
@@ -443,8 +443,14 @@ model_heading+=${blank_heading:${#model_heading}}
 readonly model_heading
 
 #-----------------------------------------------------------------------
+# qllm_to_completions_script
+#-----------------------------------------------------------------------
+#
+# This is the GNU Awk script that converts a .qllm file into a JSON
+# completions request.
+#
 
-declare -r qllm_to_completions_gawk='
+qllm_to_completions_script=$(cat <<'EOF'
 
   function barf(message) {
     print(argv0 ": " message) >"/dev/stderr";
@@ -604,6 +610,12 @@ declare -r qllm_to_completions_gawk='
     }
   }
 
+  function reject_in_inline_input() {
+    if (heredoc) {
+      barf("Directives cannot be used in an @@@<< block");
+    }
+  }
+
   BEGIN {
     role = "system";
     buffer = system_prompt;
@@ -657,20 +669,22 @@ declare -r qllm_to_completions_gawk='
         add_part();
         heredoc = z;
       } else if (sub(/^@@@ *< */, "", z)) {
+        reject_in_inline_input();
         sub(/ *$/, "", z);
         if (!z) {
           barf("The @@@< directive requires a filename");
         }
-        if (heredoc) {
-          barf("The @@@< directive cannot be used in a @@@<< block");
-        }
         add_part();
         heredoc = z;
         buffer = read_text_file(heredoc);
-        sub(/</, "<<", $0);
-        $0 = $0 "\n" buffer "\n@@@<<";
+        buffer2 = buffer;
         add_part();
+        sub(/</, "<<", $0);
+        sub(/^@@@/, " @@@", buffer2);
+        gsub(/\n@@@/, "\n @@@", buffer2);
+        $0 = $0 "\n" buffer2 "\n@@@<<";
       } else if (sub(/^@@@ *> */, "", z)) {
+        reject_in_inline_input();
         sub(/ *$/, "", z);
         if (z) {
           z = json_quote(z);
@@ -680,6 +694,7 @@ declare -r qllm_to_completions_gawk='
           output_patterns = output_patterns z;
         }
       } else if ($0 ~ /^@@@/) {
+        reject_in_inline_input();
         barf("Unknown directive: " $0);
       } else {
         if (buffer) {
@@ -720,6 +735,9 @@ declare -r qllm_to_completions_gawk='
     if (exit_status) {
       exit exit_status;
     }
+    if (heredoc) {
+      barf("Runaway @@@<< block");
+    }
     add_part(buffer);
     add_message();
     body = "{";
@@ -733,7 +751,9 @@ declare -r qllm_to_completions_gawk='
     print body;
   }
 
-'
+EOF
+)
+readonly qllm_to_completions_script
 
 #-----------------------------------------------------------------------
 
@@ -773,7 +793,7 @@ while :; do
       -v sq="$sq" \
       -v system_prompt="$system_prompt" \
       -- \
-      "$qllm_to_completions_gawk" \
+      "$qllm_to_completions_script" \
       "$session_file" \
     ;'
   )
